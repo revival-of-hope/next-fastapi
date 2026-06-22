@@ -1,6 +1,3 @@
-# 三个路由: 检查健康状态,创建用户,获取当前用户消息
-
-
 from app.utils.security import (
     verify_password,
     hashing_password,
