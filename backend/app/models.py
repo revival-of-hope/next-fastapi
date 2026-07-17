@@ -16,14 +16,18 @@ class UserLogin(UserBase):
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
-    chat: "ChatMessage" = Relationship(
+    chat: list["ChatMessage"] = Relationship(
         back_populates="user",
         cascade_delete=True,
     )
 
 
+class Message(SQLModel):
+    message: str
+
+
 class ChatMessage(SQLModel, table=True):
     chat_id: int | None = Field(default=None, primary_key=True)
     content: str | None = None
-    user_id: int | None = Field(default=None, foreign_key="user.id")
+    user_id: int | None = Field(foreign_key="user.id")
     user: User | None = Relationship(back_populates="chat")

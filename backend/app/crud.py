@@ -32,3 +32,31 @@ def check_user(session: Session, user_login: UserLogin, user_db: User):
     if not verify_password(UserLogin.password, User.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     return user
+
+
+def save_chat_message(session: Session, user_id: int, content: str) -> ChatMessage:
+    message = ChatMessage(
+        user_id=user_id,
+        content=content,
+    )
+    session.add(message)
+    session.commit()
+    session.refresh(message)
+
+    return message
+
+
+def stream_and_save(chunks, user_id: int, session: Session):
+    collected_chunks: list[str] = []
+    for chunk in chunks:
+        if not chunk:
+            continue
+        collected_chunks.append(chunk)
+        yield chunk
+    full_content = "".join(collected_chunks)
+    if full_content:
+        save_chat_message(
+            user_id=user_id,
+            content=full_content,
+            session=session,
+        )
