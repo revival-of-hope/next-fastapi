@@ -7,7 +7,7 @@ from app.core.client import stream_agent
 router = APIRouter(prefix="/user", tags=["user"])
 
 
-@router.post("[user_id]/chat")
+@router.post("/{user_id}/chat")
 async def chat(
     user_message: str,
     user_id: int,

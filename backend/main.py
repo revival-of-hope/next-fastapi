@@ -6,6 +6,8 @@ from starlette.middleware.cors import CORSMiddleware
 app = FastAPI(
     title="demo",
     openapi_url="/api/openapi.json",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
 )
 
 app.include_router(api_router, prefix="/api")
@@ -26,7 +28,7 @@ app.add_middleware(
 def main():
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host="localhost",
         port=8000,
         workers=1,
     )
