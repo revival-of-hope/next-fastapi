@@ -2,7 +2,7 @@ from collections.abc import Generator
 from typing import Annotated
 
 from sqlmodel import Session
-from app.core.db import init_db, engine
+from app.utils.db import init_db, engine
 from fastapi import Depends, HTTPException
 from app.models import User
 

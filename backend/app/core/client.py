@@ -1,38 +1,31 @@
 from app.utils.config import settings
-from openai import OpenAI  # type: ignore[import]
-from typing import Generator
+from app.utils.chat import stream_response, create_stream, create_client
 
-client = OpenAI(
-    api_key=settings.DEEPSEEK_API_KEY,
-    base_url=settings.DEEPSEEK_URL,
-)
 
-DEFAULT_MODEL = "deepseek-v4-pro"
+class DeepSeekClient:
+    DEFAULT_MODEL = "deepseek-v4-pro"
 
-DEFAULT_SYSTEM_PROMPT = """
-以后的回答都要称呼我为李华,优先输出"你好,李华!"
-"""
+    DEFAULT_SYSTEM_PROMPT = """
+    以后的回答都要称呼我为李华,优先输出"你好,李华!"
+    """
+
+
+class Clients:
+    def __init__(self):
+        self.deepseek: DeepSeekClient = DeepSeekClient()
+
+
+clients = Clients()
 
 
 def stream_agent(
     user_message: str,
-    system_prompt: str = DEFAULT_SYSTEM_PROMPT,
-    model: str = DEFAULT_MODEL,
+    system_prompt: str,
+    model: str,
 ) -> Generator[str, None, None]:
-    """
-    流式调用。
-
-    适合场景：
-    - 前端像 ChatGPT 一样，一个字一个字显示；
-    - FastAPI StreamingResponse；
-    - SSE 流式接口。
-
-    这个函数不会一次性 return 完整内容，
-    而是不断 yield 模型新生成的小片段。
-    """
 
     # 创建流式请求。
-    stream = client.chat.completions.create(
+    stream = clients.deepseek.chat.completions.create(
         model=model,
         messages=[
             {
@@ -48,11 +41,8 @@ def stream_agent(
         stream=True,
         reasoning_effort="high",
     )
-
-    # stream 是一个可迭代对象。
-    # 模型每生成一点内容，就会返回一个 chunk。
     for chunk in stream:
-        # 某些 chunk 可能没有 choices，保险起见先判断。
+        # 某些 chunk 可能没有 choices
         if not chunk.choices:
             continue
 
