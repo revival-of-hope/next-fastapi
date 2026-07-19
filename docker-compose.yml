@@ -1,0 +1,10 @@
+services:
+  backend:
+    restart: always
+    build:
+      context: ./backend
+      dockerfile: dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
