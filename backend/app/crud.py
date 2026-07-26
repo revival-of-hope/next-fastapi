@@ -1,4 +1,4 @@
-from app.utils.security import (
+from app.core.security import (
     verify_password,
     hashing_password,
 )

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.crud import healthchecker
-from app.utils.deps import SessionDep
+from app.api.deps import SessionDep
 
 router = APIRouter(prefix="/utils", tags=["utils"])
 

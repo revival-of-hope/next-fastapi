@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from app.utils.deps import SessionDep
-from app.core.client import stream_agent
+from app.api.deps import SessionDep
+from app.utils.client import stream_agent
 
 router = APIRouter(prefix="/user", tags=["user"])
 

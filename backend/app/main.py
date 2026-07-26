@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from app.core.main import api_router
+from app.api.main import api_router
 from starlette.middleware.cors import CORSMiddleware
 
 app = FastAPI(

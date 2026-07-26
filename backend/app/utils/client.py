@@ -1,6 +1,6 @@
 from app.utils.chat import stream_response, create_stream, create_client
 from typing import Generator
-from app.utils.config import settings
+from app.core.config import settings
 from app.crud import stream_and_save
 from sqlmodel import Session
 
