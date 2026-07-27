@@ -14,11 +14,16 @@ class UserBase(SQLModel):
 
 class UserRegister(SQLModel):
     password: str
-    name: str | None = Field(default=None, max_length=255)
+    name: str = Field(default=None, max_length=255)
 
 
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=16)
+
+
+class UserPublic(UserBase):
+    id: int | None
+    created_at: datetime | None = None
 
 
 class User(UserBase, table=True):
@@ -45,6 +50,12 @@ class ChatMessage(SQLModel, table=True):
     )
     user_id: int | None = Field(foreign_key="user.id")
     user: User | None = Relationship(back_populates="chats")
+
+
+class ChatMessagePublic(SQLModel):
+    chat_id: int
+    content: str | None
+    created_at: datetime | None
 
 
 class Token(SQLModel):

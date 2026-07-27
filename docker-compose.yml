@@ -14,8 +14,8 @@ services:
       - .env
   prestart:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: dockerfile
     depends_on:
       db:
         condition: service_healthy

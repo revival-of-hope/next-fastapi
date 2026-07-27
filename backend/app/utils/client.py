@@ -12,7 +12,7 @@ DEFAULT_SYSTEM_PROMPT = "以后的回答都要优先输出一句话,我是deepse
 
 
 def stream_agent(
-    user_id: int,
+    user_id: int | None,
     user_message: str,
     session: Session,
     model: str = DEFAULT_MODEL,

@@ -4,5 +4,5 @@ set -e
 set -x
 
 # Let the DB start
-python app/db_pre_start.py
+python -m app.db_pre_start
 

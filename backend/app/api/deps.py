@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 # newline
 oauth2 = OAuth2PasswordBearer(
-    tokenUrl="api/login/access-token",
+    tokenUrl="/api/login/access-token",
     scheme_name="Oauth2",
 )
 
