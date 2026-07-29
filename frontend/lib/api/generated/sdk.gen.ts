@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, type Options as Options2, type RequestResult, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { ChatApiUserMeChatPostData, ChatApiUserMeChatPostErrors, ChatApiUserMeChatPostResponses, GetChatListApiUserMeMessagesGetData, GetChatListApiUserMeMessagesGetErrors, GetChatListApiUserMeMessagesGetResponses, HealthCheckApiUtilsHealthGetData, HealthCheckApiUtilsHealthGetResponses, HomepageApiUserMeGetData, HomepageApiUserMeGetResponses, LoginAccessTokenApiLoginAccessTokenPostData, LoginAccessTokenApiLoginAccessTokenPostErrors, LoginAccessTokenApiLoginAccessTokenPostResponses, RegisterUserApiUserRegisterPostData, RegisterUserApiUserRegisterPostErrors, RegisterUserApiUserRegisterPostResponses } from './types.gen';
+import type { ApiLoginAccessPostData, ApiLoginAccessPostErrors, ApiLoginAccessPostResponses, ApiUserMeChatPostData, ApiUserMeChatPostErrors, ApiUserMeChatPostResponses, ApiUserMeGetData, ApiUserMeGetResponses, ApiUserMeMessagesGetData, ApiUserMeMessagesGetErrors, ApiUserMeMessagesGetResponses, ApiUserRegisterPostData, ApiUserRegisterPostErrors, ApiUserRegisterPostResponses, ApiUtilsHealthGetData, ApiUtilsHealthGetResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -21,7 +21,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Register User
  */
-export const registerUserApiUserRegisterPost = <ThrowOnError extends boolean = false>(options: Options<RegisterUserApiUserRegisterPostData, ThrowOnError>): RequestResult<RegisterUserApiUserRegisterPostResponses, RegisterUserApiUserRegisterPostErrors, ThrowOnError> => (options.client ?? client).post<RegisterUserApiUserRegisterPostResponses, RegisterUserApiUserRegisterPostErrors, ThrowOnError>({
+export const apiUserRegisterPost = <ThrowOnError extends boolean = false>(options: Options<ApiUserRegisterPostData, ThrowOnError>): RequestResult<ApiUserRegisterPostResponses, ApiUserRegisterPostErrors, ThrowOnError> => (options.client ?? client).post<ApiUserRegisterPostResponses, ApiUserRegisterPostErrors, ThrowOnError>({
     url: '/api/user/register',
     ...options,
     headers: {
@@ -33,7 +33,7 @@ export const registerUserApiUserRegisterPost = <ThrowOnError extends boolean = f
 /**
  * Homepage
  */
-export const homepageApiUserMeGet = <ThrowOnError extends boolean = false>(options?: Options<HomepageApiUserMeGetData, ThrowOnError>): RequestResult<HomepageApiUserMeGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<HomepageApiUserMeGetResponses, unknown, ThrowOnError>({
+export const apiUserMeGet = <ThrowOnError extends boolean = false>(options?: Options<ApiUserMeGetData, ThrowOnError>): RequestResult<ApiUserMeGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ApiUserMeGetResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/user/me',
     ...options
@@ -42,7 +42,7 @@ export const homepageApiUserMeGet = <ThrowOnError extends boolean = false>(optio
 /**
  * Chat
  */
-export const chatApiUserMeChatPost = <ThrowOnError extends boolean = false>(options: Options<ChatApiUserMeChatPostData, ThrowOnError>): RequestResult<ChatApiUserMeChatPostResponses, ChatApiUserMeChatPostErrors, ThrowOnError> => (options.client ?? client).post<ChatApiUserMeChatPostResponses, ChatApiUserMeChatPostErrors, ThrowOnError>({
+export const apiUserMeChatPost = <ThrowOnError extends boolean = false>(options: Options<ApiUserMeChatPostData, ThrowOnError>): RequestResult<ApiUserMeChatPostResponses, ApiUserMeChatPostErrors, ThrowOnError> => (options.client ?? client).post<ApiUserMeChatPostResponses, ApiUserMeChatPostErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/user/me/chat',
     ...options
@@ -51,7 +51,7 @@ export const chatApiUserMeChatPost = <ThrowOnError extends boolean = false>(opti
 /**
  * Get Chat List
  */
-export const getChatListApiUserMeMessagesGet = <ThrowOnError extends boolean = false>(options?: Options<GetChatListApiUserMeMessagesGetData, ThrowOnError>): RequestResult<GetChatListApiUserMeMessagesGetResponses, GetChatListApiUserMeMessagesGetErrors, ThrowOnError> => (options?.client ?? client).get<GetChatListApiUserMeMessagesGetResponses, GetChatListApiUserMeMessagesGetErrors, ThrowOnError>({
+export const apiUserMeMessagesGet = <ThrowOnError extends boolean = false>(options?: Options<ApiUserMeMessagesGetData, ThrowOnError>): RequestResult<ApiUserMeMessagesGetResponses, ApiUserMeMessagesGetErrors, ThrowOnError> => (options?.client ?? client).get<ApiUserMeMessagesGetResponses, ApiUserMeMessagesGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/user/me/messages',
     ...options
@@ -60,12 +60,12 @@ export const getChatListApiUserMeMessagesGet = <ThrowOnError extends boolean = f
 /**
  * Health Check
  */
-export const healthCheckApiUtilsHealthGet = <ThrowOnError extends boolean = false>(options?: Options<HealthCheckApiUtilsHealthGetData, ThrowOnError>): RequestResult<HealthCheckApiUtilsHealthGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<HealthCheckApiUtilsHealthGetResponses, unknown, ThrowOnError>({ url: '/api/utils/health', ...options });
+export const apiUtilsHealthGet = <ThrowOnError extends boolean = false>(options?: Options<ApiUtilsHealthGetData, ThrowOnError>): RequestResult<ApiUtilsHealthGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ApiUtilsHealthGetResponses, unknown, ThrowOnError>({ url: '/api/utils/health', ...options });
 
 /**
  * Login Access Token
  */
-export const loginAccessTokenApiLoginAccessTokenPost = <ThrowOnError extends boolean = false>(options: Options<LoginAccessTokenApiLoginAccessTokenPostData, ThrowOnError>): RequestResult<LoginAccessTokenApiLoginAccessTokenPostResponses, LoginAccessTokenApiLoginAccessTokenPostErrors, ThrowOnError> => (options.client ?? client).post<LoginAccessTokenApiLoginAccessTokenPostResponses, LoginAccessTokenApiLoginAccessTokenPostErrors, ThrowOnError>({
+export const apiLoginAccessPost = <ThrowOnError extends boolean = false>(options: Options<ApiLoginAccessPostData, ThrowOnError>): RequestResult<ApiLoginAccessPostResponses, ApiLoginAccessPostErrors, ThrowOnError> => (options.client ?? client).post<ApiLoginAccessPostResponses, ApiLoginAccessPostErrors, ThrowOnError>({
     ...urlSearchParamsBodySerializer,
     url: '/api/login/access-token',
     ...options,

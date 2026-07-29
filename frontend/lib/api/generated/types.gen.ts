@@ -5,9 +5,9 @@ export type ClientOptions = {
 };
 
 /**
- * Body_login_access_token_api_login_access_token_post
+ * Body_ApiLoginAccessPost
  */
-export type BodyLoginAccessTokenApiLoginAccessTokenPost = {
+export type BodyApiLoginAccessPost = {
     /**
      * Grant Type
      */
@@ -140,48 +140,48 @@ export type ValidationError = {
     };
 };
 
-export type RegisterUserApiUserRegisterPostData = {
+export type ApiUserRegisterPostData = {
     body: UserRegister;
     path?: never;
     query?: never;
     url: '/api/user/register';
 };
 
-export type RegisterUserApiUserRegisterPostErrors = {
+export type ApiUserRegisterPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RegisterUserApiUserRegisterPostError = RegisterUserApiUserRegisterPostErrors[keyof RegisterUserApiUserRegisterPostErrors];
+export type ApiUserRegisterPostError = ApiUserRegisterPostErrors[keyof ApiUserRegisterPostErrors];
 
-export type RegisterUserApiUserRegisterPostResponses = {
+export type ApiUserRegisterPostResponses = {
     /**
      * Successful Response
      */
     200: UserPublic;
 };
 
-export type RegisterUserApiUserRegisterPostResponse = RegisterUserApiUserRegisterPostResponses[keyof RegisterUserApiUserRegisterPostResponses];
+export type ApiUserRegisterPostResponse = ApiUserRegisterPostResponses[keyof ApiUserRegisterPostResponses];
 
-export type HomepageApiUserMeGetData = {
+export type ApiUserMeGetData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/user/me';
 };
 
-export type HomepageApiUserMeGetResponses = {
+export type ApiUserMeGetResponses = {
     /**
      * Successful Response
      */
     200: UserPublic;
 };
 
-export type HomepageApiUserMeGetResponse = HomepageApiUserMeGetResponses[keyof HomepageApiUserMeGetResponses];
+export type ApiUserMeGetResponse = ApiUserMeGetResponses[keyof ApiUserMeGetResponses];
 
-export type ChatApiUserMeChatPostData = {
+export type ApiUserMeChatPostData = {
     body?: never;
     path?: never;
     query: {
@@ -193,23 +193,23 @@ export type ChatApiUserMeChatPostData = {
     url: '/api/user/me/chat';
 };
 
-export type ChatApiUserMeChatPostErrors = {
+export type ApiUserMeChatPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ChatApiUserMeChatPostError = ChatApiUserMeChatPostErrors[keyof ChatApiUserMeChatPostErrors];
+export type ApiUserMeChatPostError = ApiUserMeChatPostErrors[keyof ApiUserMeChatPostErrors];
 
-export type ChatApiUserMeChatPostResponses = {
+export type ApiUserMeChatPostResponses = {
     /**
      * Successful Response
      */
     200: unknown;
 };
 
-export type GetChatListApiUserMeMessagesGetData = {
+export type ApiUserMeMessagesGetData = {
     body?: never;
     path?: never;
     query?: {
@@ -225,65 +225,65 @@ export type GetChatListApiUserMeMessagesGetData = {
     url: '/api/user/me/messages';
 };
 
-export type GetChatListApiUserMeMessagesGetErrors = {
+export type ApiUserMeMessagesGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetChatListApiUserMeMessagesGetError = GetChatListApiUserMeMessagesGetErrors[keyof GetChatListApiUserMeMessagesGetErrors];
+export type ApiUserMeMessagesGetError = ApiUserMeMessagesGetErrors[keyof ApiUserMeMessagesGetErrors];
 
-export type GetChatListApiUserMeMessagesGetResponses = {
+export type ApiUserMeMessagesGetResponses = {
     /**
-     * Response Get Chat List Api User Me Messages Get
+     * Response Apiusermemessagesget
      *
      * Successful Response
      */
     200: Array<ChatMessagePublic>;
 };
 
-export type GetChatListApiUserMeMessagesGetResponse = GetChatListApiUserMeMessagesGetResponses[keyof GetChatListApiUserMeMessagesGetResponses];
+export type ApiUserMeMessagesGetResponse = ApiUserMeMessagesGetResponses[keyof ApiUserMeMessagesGetResponses];
 
-export type HealthCheckApiUtilsHealthGetData = {
+export type ApiUtilsHealthGetData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/utils/health';
 };
 
-export type HealthCheckApiUtilsHealthGetResponses = {
+export type ApiUtilsHealthGetResponses = {
     /**
-     * Response Health Check Api Utils Health Get
+     * Response Apiutilshealthget
      *
      * Successful Response
      */
     200: boolean;
 };
 
-export type HealthCheckApiUtilsHealthGetResponse = HealthCheckApiUtilsHealthGetResponses[keyof HealthCheckApiUtilsHealthGetResponses];
+export type ApiUtilsHealthGetResponse = ApiUtilsHealthGetResponses[keyof ApiUtilsHealthGetResponses];
 
-export type LoginAccessTokenApiLoginAccessTokenPostData = {
-    body: BodyLoginAccessTokenApiLoginAccessTokenPost;
+export type ApiLoginAccessPostData = {
+    body: BodyApiLoginAccessPost;
     path?: never;
     query?: never;
     url: '/api/login/access-token';
 };
 
-export type LoginAccessTokenApiLoginAccessTokenPostErrors = {
+export type ApiLoginAccessPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type LoginAccessTokenApiLoginAccessTokenPostError = LoginAccessTokenApiLoginAccessTokenPostErrors[keyof LoginAccessTokenApiLoginAccessTokenPostErrors];
+export type ApiLoginAccessPostError = ApiLoginAccessPostErrors[keyof ApiLoginAccessPostErrors];
 
-export type LoginAccessTokenApiLoginAccessTokenPostResponses = {
+export type ApiLoginAccessPostResponses = {
     /**
      * Successful Response
      */
     200: Token;
 };
 
-export type LoginAccessTokenApiLoginAccessTokenPostResponse = LoginAccessTokenApiLoginAccessTokenPostResponses[keyof LoginAccessTokenApiLoginAccessTokenPostResponses];
+export type ApiLoginAccessPostResponse = ApiLoginAccessPostResponses[keyof ApiLoginAccessPostResponses];
