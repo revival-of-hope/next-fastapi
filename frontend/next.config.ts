@@ -1,9 +1,5 @@
-import type { NextConfig } from "next";
+const nextConfig = {
+  output: "standalone",
+}
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
-  devIndicators: false,
-};
-
-export default nextConfig;
+export default nextConfig

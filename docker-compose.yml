@@ -38,6 +38,12 @@ services:
       - .env
     ports:
       - "8000:8000"
-
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
 volumes:
   db-data:
