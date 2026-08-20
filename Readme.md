@@ -5,3 +5,8 @@
 
 >[!IMPORTANT]
 有多个分支,每一章节都有一个对应仓库,动态更新中,预计8月份完结.
+
+## 一键启动
+```bash
+docker compose up -d --build
+```
