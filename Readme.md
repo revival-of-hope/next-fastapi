@@ -8,5 +8,6 @@
 
 ## 一键启动
 ```bash
+cp .env.example .env
 docker compose up -d --build
 ```

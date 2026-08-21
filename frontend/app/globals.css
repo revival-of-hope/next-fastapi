@@ -130,3 +130,12 @@
     @apply font-sans;
     }
 }
+@layer base {
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 22%, transparent);
+  }
+
+  body {
+    min-width: 320px;
+  }
+}
