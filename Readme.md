@@ -4,10 +4,15 @@
 自建智能体项目,前端使用nextjs的app router,后端使用python的fastapi,通过docker compose统一部署
 
 >[!IMPORTANT]
-有多个分支,每一章节都有一个对应仓库,动态更新中,预计8月份完结.
+有多个分支,每一章节都有一个对应仓库,动态更新中,预计9月份完结.
 
 ## 一键启动
+填入API Key:
 ```bash
 cp .env.example .env
+```
+
+docker compose启动:
+```bash
 docker compose up -d --build
 ```

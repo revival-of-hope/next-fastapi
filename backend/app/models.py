@@ -1,5 +1,6 @@
+from pydantic import BaseModel
 from sqlalchemy import DateTime
-from sqlmodel import Relationship, SQLModel, Field
+from sqlmodel import Relationship, SQLModel, Field, Text
 from datetime import UTC, datetime
 
 
@@ -7,55 +8,112 @@ def get_datetime() -> datetime:
     return datetime.now(UTC)
 
 
+# User
+
+
 class UserBase(SQLModel):
-    name: str | None = Field(default=None, max_length=255)
-    is_active: bool = True
+    name: str = Field(default=None, min_length=1, max_length=30)
 
 
-class UserRegister(SQLModel):
-    password: str
-    name: str = Field(default=None, max_length=255)
-
-
-class UserCreate(UserBase):
-    password: str = Field(min_length=8, max_length=16)
+class UserRegister(UserBase):
+    # 写成1是为了偷懒~
+    password: str = Field(min_length=1, max_length=15)
 
 
 class UserPublic(UserBase):
-    id: int | None
-    created_at: datetime | None = None
+    id: int
+    created_at: datetime
+    is_active: bool = True
 
 
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    hashed_password: str
-    created_at: datetime | None = Field(
-        default_factory=get_datetime,
-    )
-    chats: list["ChatMessage"] = Relationship(
+    hashed_password: str = Field(max_length=256)
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=get_datetime)
+    conversations: list["Conversation"] = Relationship(
         back_populates="user",
         cascade_delete=True,
     )
 
 
-class Message(SQLModel):
-    message: str
+# Conversation
+class ConversationCreate(SQLModel):
+    title: str | None = Field(default=None, max_length=120)
 
 
-class ChatMessage(SQLModel, table=True):
-    chat_id: int | None = Field(default=None, primary_key=True)
-    content: str | None = None
-    created_at: datetime | None = Field(
+class ConversationBase(SQLModel):
+    title: str = Field(max_length=35)
+    conversation_id: int | None = Field(default=None, primary_key=True)
+
+
+class ConversationPublic(ConversationBase):
+    created_at: datetime
+    updated_at: datetime
+
+
+class Conversation(ConversationBase, table=True):
+    created_at: datetime = Field(
+        default_factory=get_datetime,
+    )
+    update_at: datetime = Field(
         default_factory=get_datetime,
     )
     user_id: int | None = Field(foreign_key="user.id")
-    user: User | None = Relationship(back_populates="chats")
+
+    user: User | None = Relationship(back_populates="conversations")
+    messages: list["Message"] = Relationship(
+        back_populates="conversation",
+        cascade_delete=True,
+    )
 
 
-class ChatMessagePublic(SQLModel):
-    chat_id: int
-    content: str | None
-    created_at: datetime | None
+# Message
+class MessageRole(BaseModel):
+    USER = "user"
+    ASSISTANT = "assistant"
+    SYSTEM = "system"
+    TOOL = "tool"
+
+
+class ChatRequest(SQLModel):
+    # 根据id是否为空可以判断是否为已有对话
+    conversation_id: int | None = None
+    content: str = Field(min_length=3)
+
+
+class MessageBase(SQLModel):
+    message_id: int | None = Field(
+        default=None,
+        primary_key=True,
+    )
+    conversation_id: int = Field(
+        foreign_key="conversation.conversation_id",
+        ondelete="CASCADE",
+    )
+    role: MessageRole
+    # sa_type表示强制让引擎把content的类型改为Text,
+    # 从而可以支持存储AI输出的冗长文本
+    content: str = Field(sa_type=Text, nullable=False)
+
+
+class MessagePublic(MessageBase):
+    created_at: datetime
+
+
+class Message(MessageBase, table=True):
+
+    created_at: datetime = Field(default_factory=get_datetime)
+    conversation: Conversation | None = Relationship(
+        back_populates="messages",
+    )
+
+
+class ConversationDetail(ConversationPublic):
+    messages: list[MessagePublic] = Field(default_factory=list)
+
+
+# Token
 
 
 class Token(SQLModel):
@@ -64,4 +122,4 @@ class Token(SQLModel):
 
 
 class TokenPayload(SQLModel):
-    sub: str | None = None
+    sub: str

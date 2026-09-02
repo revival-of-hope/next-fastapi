@@ -13,7 +13,7 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 # response_model用于过滤密码
 @router.post("/register", response_model=UserPublic)
-def register_user(session: SessionDep, user_in: UserRegister) -> Any:
+def register_user(session: SessionDep, user_in: UserRegister) -> User:
     user = crud.get_user_by_name(session=session, name=user_in.name)
     if user:
         raise HTTPException(status_code=400, detail="Name exists")
