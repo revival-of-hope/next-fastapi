@@ -4,7 +4,7 @@ from app.core.security import (
 )
 from fastapi import HTTPException
 from sqlmodel import Session, select
-from app.models import User, UserCreate, UserRegister, ChatMessage
+from app.models import User, UserRegister, Conversation
 
 # Dummy hash to use for timing attack prevention when user is not found
 DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$MjQyZWE1MzBjYjJlZTI0Yw$YTU4NGM5ZTZmYjE2NzZlZjY0ZWY3ZGRkY2U2OWFjNjk"
@@ -48,8 +48,8 @@ def check_user(session: Session, name: str, password: str) -> User | None:
 # 工具函数
 def save_chat_message(
     *, session: Session, user_id: int | None, content: str
-) -> ChatMessage:
-    message = ChatMessage(
+) -> Conversation:
+    message = Conversation(
         user_id=user_id,
         content=content,
     )

@@ -2,8 +2,6 @@ from typing import Generator
 from openai import Stream, OpenAI
 from openai.types.chat import ChatCompletionChunk
 
-from app.crud import save_chat_message
-
 
 def messages(user_message: str, system_prompt: str) -> list[dict]:
     return [

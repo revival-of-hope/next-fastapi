@@ -2,7 +2,7 @@ from typing import Annotated
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from app.crud import check_db, check_user
+from app.crud import check_user
 from app.api.deps import SessionDep
 from app.models import Token
 from app.core import security
@@ -12,12 +12,7 @@ router = APIRouter(tags=["utils"])
 TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
 
 
-@router.get("/utils/health")
-async def health_check(session: SessionDep) -> bool:
-    return check_db(session=session)
-
-
-@router.post("/login/access-token")
+@router.post("/access-token")
 def login_access_token(
     session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> Token:

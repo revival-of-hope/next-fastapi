@@ -1,5 +1,4 @@
-from pydantic import BaseModel
-from sqlalchemy import DateTime
+from enum import Enum
 from sqlmodel import Relationship, SQLModel, Field, Text
 from datetime import UTC, datetime
 
@@ -12,7 +11,7 @@ def get_datetime() -> datetime:
 
 
 class UserBase(SQLModel):
-    name: str = Field(default=None, min_length=1, max_length=30)
+    name: str = Field(min_length=1, max_length=30)
 
 
 class UserRegister(UserBase):
@@ -39,37 +38,42 @@ class User(UserBase, table=True):
 
 # Conversation
 class ConversationCreate(SQLModel):
-    title: str | None = Field(default=None, max_length=120)
+    title: str | None = Field(default=None, min_length=1, max_length=120)
 
 
 class ConversationBase(SQLModel):
-    title: str = Field(max_length=35)
-    conversation_id: int | None = Field(default=None, primary_key=True)
+    title: str | None = Field(default="新对话", min_length=1, max_length=120)
 
 
 class ConversationPublic(ConversationBase):
+    conversation_id: int
     created_at: datetime
     updated_at: datetime
 
 
 class Conversation(ConversationBase, table=True):
-    created_at: datetime = Field(
-        default_factory=get_datetime,
-    )
-    update_at: datetime = Field(
-        default_factory=get_datetime,
-    )
-    user_id: int | None = Field(foreign_key="user.id")
+    conversation_id: int | None = Field(default=None, primary_key=True)
 
+    user_id: int | None = Field(foreign_key="user.id")
     user: User | None = Relationship(back_populates="conversations")
+
     messages: list["Message"] = Relationship(
         back_populates="conversation",
         cascade_delete=True,
     )
+    created_at: datetime = Field(
+        default_factory=get_datetime,
+    )
+    updated_at: datetime = Field(
+        default_factory=get_datetime,
+    )
 
 
 # Message
-class MessageRole(BaseModel):
+
+
+# 用于判断消息类型,从而区分用户提问和AI回答
+class MessageRole(str, Enum):
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
@@ -79,14 +83,11 @@ class MessageRole(BaseModel):
 class ChatRequest(SQLModel):
     # 根据id是否为空可以判断是否为已有对话
     conversation_id: int | None = None
-    content: str = Field(min_length=3)
+    content: str = Field(min_length=1, max_length=20000)
 
 
 class MessageBase(SQLModel):
-    message_id: int | None = Field(
-        default=None,
-        primary_key=True,
-    )
+
     conversation_id: int = Field(
         foreign_key="conversation.conversation_id",
         ondelete="CASCADE",
@@ -98,11 +99,16 @@ class MessageBase(SQLModel):
 
 
 class MessagePublic(MessageBase):
+    conversation_id: int
+    message_id: int
     created_at: datetime
 
 
 class Message(MessageBase, table=True):
-
+    message_id: int | None = Field(
+        default=None,
+        primary_key=True,
+    )
     created_at: datetime = Field(default_factory=get_datetime)
     conversation: Conversation | None = Relationship(
         back_populates="messages",

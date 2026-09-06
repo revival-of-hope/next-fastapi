@@ -4,19 +4,19 @@ from typing import Annotated
 from sqlmodel import Session
 
 from app.core.db import engine
-from app.models import User, TokenPayload  # newline
+from app.models import User, TokenPayload  
 from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends, HTTPException, status  # newline
+from fastapi import Depends, HTTPException, status  
 
-# newline
+
 import jwt
 from jwt.exceptions import InvalidTokenError
 from app.core.config import settings
 from pydantic import ValidationError
 
-# newline
+
 oauth2 = OAuth2PasswordBearer(
-    tokenUrl="/api/login/access-token",
+    tokenUrl="/api/access-token",
     scheme_name="Oauth2",
 )
 
