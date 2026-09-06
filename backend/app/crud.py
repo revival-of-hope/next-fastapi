@@ -1,18 +1,20 @@
+from typing import List
 from app.core.security import (
     verify_password,
     hashing_password,
 )
-from fastapi import HTTPException
-from sqlmodel import Session, select
-from app.models import User, UserRegister, Conversation
+from sqlmodel import Session, select, desc
+from app.models import (
+    Message,
+    MessageRole,
+    User,
+    UserRegister,
+    Conversation,
+    get_datetime,
+)
 
 # Dummy hash to use for timing attack prevention when user is not found
 DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$MjQyZWE1MzBjYjJlZTI0Yw$YTU4NGM5ZTZmYjE2NzZlZjY0ZWY3ZGRkY2U2OWFjNjk"
-
-
-def check_db(*, session: Session):
-    result = session.exec(select(1)).one()
-    return result == 1
 
 
 def register_user(*, session: Session, user_register: UserRegister) -> User:
@@ -45,34 +47,47 @@ def check_user(session: Session, name: str, password: str) -> User | None:
     return db_user
 
 
-# 工具函数
-def save_chat_message(
-    *, session: Session, user_id: int | None, content: str
-) -> Conversation:
-    message = Conversation(
-        user_id=user_id,
+# 保存消息
+def save_message(
+    *,
+    session: Session,
+    conversation: Conversation,
+    role: MessageRole,
+    content: str,
+) -> Message:
+    message = Message(
+        conversation_id=conversation.conversation_id,
+        role=role,
         content=content,
     )
+    conversation.updated_at = get_datetime()
     session.add(message)
+    session.add(conversation)
     session.commit()
     session.refresh(message)
 
     return message
 
 
-def stream_and_save(*, session: Session, user_id: int | None, chunks):
-    collected_chunks: list[str] = []
-    for chunk in chunks:
-        if not chunk:
-            continue
-        collected_chunks.append(chunk)
-        yield chunk
-    full_content = "".join(collected_chunks)
-    if not user_id:
-        raise HTTPException(status_code=404, detail="User not found")
-    if full_content:
-        save_chat_message(
-            user_id=user_id,
-            content=full_content,
-            session=session,
+# 获取历史消息
+def get_history_message(
+    *,
+    session: Session,
+    conversation: Conversation,
+    limit: int = 4,
+) -> List[Message]:
+    id = conversation.conversation_id
+    if id is None:
+        return []
+    statement = (
+        select(Message)
+        .where(Message.conversation_id == id)
+        .order_by(
+            desc(Message.created_at),
+            desc(Message.message_id),
         )
+        .limit(limit)
+    )
+    messages = list(session.exec(statement).all())
+    messages.reverse()
+    return messages

@@ -54,7 +54,7 @@ class ConversationPublic(ConversationBase):
 class Conversation(ConversationBase, table=True):
     conversation_id: int | None = Field(default=None, primary_key=True)
 
-    user_id: int | None = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="user.id")
     user: User | None = Relationship(back_populates="conversations")
 
     messages: list["Message"] = Relationship(
@@ -88,7 +88,7 @@ class ChatRequest(SQLModel):
 
 class MessageBase(SQLModel):
 
-    conversation_id: int = Field(
+    conversation_id: int | None = Field(
         foreign_key="conversation.conversation_id",
         ondelete="CASCADE",
     )
@@ -105,7 +105,7 @@ class MessagePublic(MessageBase):
 
 
 class Message(MessageBase, table=True):
-    message_id: int | None = Field(
+    message_id: int = Field(
         default=None,
         primary_key=True,
     )

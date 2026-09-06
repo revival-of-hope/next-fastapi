@@ -1,7 +1,7 @@
-from app.utils.chat import stream_response, create_stream, create_client
+from backend.app.utils.stream import stream_response, create_stream, create_client
 from typing import Generator
 from app.core.config import settings
-from app.crud import stream_and_save
+from app.utils.stream import stream_and_save
 from sqlmodel import Session
 
 client = create_client(settings.DEEPSEEK_API_KEY, settings.DEEPSEEK_URL)
