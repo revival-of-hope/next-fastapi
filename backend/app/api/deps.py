@@ -4,7 +4,8 @@ from typing import Annotated
 from sqlmodel import Session
 
 from app.core.db import engine
-from app.models import User, TokenPayload
+from app.models import User
+from app.models import TokenPayload
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 

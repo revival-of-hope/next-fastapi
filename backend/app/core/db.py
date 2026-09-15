@@ -2,7 +2,7 @@ from sqlmodel import (
     create_engine,
     SQLModel,
 )
-from app import models
+from app.models import models
 from app.core.config import settings
 
 engine = create_engine(str(settings.DATABASE_URI))

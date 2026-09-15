@@ -1,6 +1,6 @@
-from enum import Enum
 from sqlmodel import Relationship, SQLModel, Field, Text
 from datetime import UTC, datetime
+from .schemas import MessageRole
 
 
 def get_datetime() -> datetime:
@@ -8,21 +8,8 @@ def get_datetime() -> datetime:
 
 
 # User
-
-
 class UserBase(SQLModel):
     name: str = Field(min_length=1, max_length=30)
-
-
-class UserRegister(UserBase):
-    # 写成1是为了偷懒~
-    password: str = Field(min_length=1, max_length=15)
-
-
-class UserPublic(UserBase):
-    id: int
-    created_at: datetime
-    is_active: bool
 
 
 class User(UserBase, table=True):
@@ -37,18 +24,8 @@ class User(UserBase, table=True):
 
 
 # Conversation
-class ConversationCreate(SQLModel):
-    title: str | None = Field(default=None, min_length=1, max_length=120)
-
-
 class ConversationBase(SQLModel):
     title: str | None = Field(default="新对话", min_length=1, max_length=120)
-
-
-class ConversationPublic(ConversationBase):
-    conversation_id: int
-    created_at: datetime
-    updated_at: datetime
 
 
 class Conversation(ConversationBase, table=True):
@@ -72,20 +49,7 @@ class Conversation(ConversationBase, table=True):
 # Message
 
 
-# 用于判断消息类型,从而区分用户提问和AI回答
-class MessageRole(str, Enum):
-    USER = "user"
-    ASSISTANT = "assistant"
-
-
-class ChatRequest(SQLModel):
-    # 根据id是否为空可以判断是否为已有对话
-    conversation_id: int | None = Field(default=None, ge=1)
-    content: str = Field(min_length=1, max_length=20_000)
-
-
 class MessageBase(SQLModel):
-
     conversation_id: int | None = Field(
         foreign_key="conversation.conversation_id",
         ondelete="CASCADE",
@@ -94,11 +58,6 @@ class MessageBase(SQLModel):
     # sa_type表示强制让引擎把content的类型改为Text,
     # 从而可以支持存储AI输出的冗长文本
     content: str = Field(sa_type=Text, nullable=False)
-
-
-class MessagePublic(MessageBase):
-    message_id: int
-    created_at: datetime
 
 
 class Message(MessageBase, table=True):
@@ -110,19 +69,3 @@ class Message(MessageBase, table=True):
     conversation: Conversation | None = Relationship(
         back_populates="messages",
     )
-
-
-class ConversationDetail(ConversationPublic):
-    messages: list[MessagePublic] = Field(default_factory=list)
-
-
-# Token
-
-
-class Token(SQLModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class TokenPayload(SQLModel):
-    sub: str

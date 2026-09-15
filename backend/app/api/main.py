@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.routing import APIRoute
 from app.api.routers import utils
-from backend.app.api.routers import users
+from app.api.routers import users
 
 
 def generate_operation_id(route: APIRoute):
