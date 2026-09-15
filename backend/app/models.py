@@ -22,7 +22,7 @@ class UserRegister(UserBase):
 class UserPublic(UserBase):
     id: int
     created_at: datetime
-    is_active: bool = True
+    is_active: bool
 
 
 class User(UserBase, table=True):
@@ -76,14 +76,12 @@ class Conversation(ConversationBase, table=True):
 class MessageRole(str, Enum):
     USER = "user"
     ASSISTANT = "assistant"
-    SYSTEM = "system"
-    TOOL = "tool"
 
 
 class ChatRequest(SQLModel):
     # 根据id是否为空可以判断是否为已有对话
-    conversation_id: int | None = None
-    content: str = Field(min_length=1, max_length=20000)
+    conversation_id: int | None = Field(default=None, ge=1)
+    content: str = Field(min_length=1, max_length=20_000)
 
 
 class MessageBase(SQLModel):
@@ -99,7 +97,6 @@ class MessageBase(SQLModel):
 
 
 class MessagePublic(MessageBase):
-    conversation_id: int
     message_id: int
     created_at: datetime
 

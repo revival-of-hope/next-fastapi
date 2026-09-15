@@ -1,29 +1,40 @@
-from backend.app.utils.stream import stream_response, create_stream, create_client
-from typing import Generator
-from app.core.config import settings
-from app.utils.stream import stream_and_save
-from sqlmodel import Session
+from app.utils.stream import (
+    build_messages,
+    stream_response,
+    create_stream,
+    create_client,
+)
+from functools import lru_cache
 
-client = create_client(settings.DEEPSEEK_API_KEY, settings.DEEPSEEK_URL)
+from app.models import Message
+from app.core.config import settings
+from collections.abc import Iterator
 
 DEFAULT_MODEL = "deepseek-v4-pro"
-
 DEFAULT_SYSTEM_PROMPT = "以后的回答都要优先输出一句话,我是deepseek-v4-pro."
 
 
+@lru_cache
+def get_client():
+    return create_client(
+        settings.DEEPSEEK_API_KEY,
+        settings.DEEPSEEK_URL,
+    )
+
+
 def stream_agent(
-    user_id: int | None,
-    user_message: str,
-    session: Session,
+    *,
+    history: list[Message],
     model: str = DEFAULT_MODEL,
     system_prompt: str = DEFAULT_SYSTEM_PROMPT,
-) -> Generator[str, None, None]:
+) -> Iterator[str]:
+    # 构造消息列表
+    message_list = build_messages(system_prompt=system_prompt, history=history)
 
-    # 创建流式请求。
-    stream = create_stream(client, model, user_message, system_prompt)
-    chunks = stream_response(stream)
-    yield from stream_and_save(
-        chunks=chunks,
-        user_id=user_id,
-        session=session,
+    # 打开通信流
+    stream = create_stream(
+        client=get_client(),
+        model=model,
+        messages=message_list,
     )
+    return stream_response(stream)

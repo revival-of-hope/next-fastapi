@@ -1,20 +1,21 @@
 from typing import Annotated
 from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from app.crud import check_user
 from app.api.deps import SessionDep
 from app.models import Token
 from app.core import security
 
-router = APIRouter(tags=["utils"])
+router = APIRouter()
 
 TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
 
 
-@router.post("/access-token")
+@router.post("/access-token", tags=["auth"])
 def login_access_token(
-    session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    session: SessionDep,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
     user = check_user(
         session=session,
@@ -22,9 +23,15 @@ def login_access_token(
         password=form_data.password,
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect name or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect name or password",
+        )
     elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
+        )
     token_expires = timedelta(minutes=TOKEN_EXPIRE_MINUTES)
     return Token(
         access_token=security.create_token(

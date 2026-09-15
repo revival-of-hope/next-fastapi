@@ -4,16 +4,15 @@ from typing import Annotated
 from sqlmodel import Session
 
 from app.core.db import engine
-from app.models import User, TokenPayload  
+from app.models import User, TokenPayload
 from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends, HTTPException, status  
+from fastapi import Depends, HTTPException, status
 
 
 import jwt
 from jwt.exceptions import InvalidTokenError
 from app.core.config import settings
 from pydantic import ValidationError
-
 
 oauth2 = OAuth2PasswordBearer(
     tokenUrl="/api/access-token",
@@ -44,7 +43,7 @@ def get_current_user(
             algorithms=[ALGORITHM],
         )
         token_data = TokenPayload(**payload)
-    except InvalidTokenError, ValidationError:
+    except (InvalidTokenError, ValidationError):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid credentials",

@@ -1,48 +1,64 @@
-from typing import Generator
+from typing import Iterator, Sequence
 from openai import Stream, OpenAI
-from openai.types.chat import ChatCompletionChunk
-from sqlmodel import Session
+from openai.types.chat import (
+    ChatCompletionAssistantMessageParam,
+    ChatCompletionChunk,
+    ChatCompletionMessageParam,
+    ChatCompletionSystemMessageParam,
+    ChatCompletionUserMessageParam,
+)
 
-from app.crud import save_message
-from app.models import Conversation, MessageRole
+from app.models import Message, MessageRole
 
 
 # history代表历史消息
-def messages(user_message: str, system_prompt: str, history) -> list[dict]:
-    return [
-        {
-            "role": "system",
-            "content": system_prompt,
-        },
-        history,
-        {
-            "role": "user",
-            "content": user_message,
-        },
+def build_messages(
+    *,
+    system_prompt: str,
+    history: list[Message],
+) -> list[ChatCompletionMessageParam]:
+    messages: list[ChatCompletionMessageParam] = [
+        ChatCompletionSystemMessageParam(role="system", content=system_prompt)
     ]
+    for message in history:
+        if message.role is MessageRole.USER:
+            messages.append(
+                ChatCompletionUserMessageParam(
+                    role="user",
+                    content=message.content,
+                )
+            )
+        else:
+            messages.append(
+                ChatCompletionAssistantMessageParam(
+                    role="assistant",
+                    content=message.content,
+                )
+            )
+    return messages
 
 
-def create_client(api_key: str, url: str):
+def create_client(*, api_key: str, url: str) -> OpenAI:
     return OpenAI(api_key=api_key, base_url=url)
 
 
 def create_stream(
+    *,
     client: OpenAI,
     model: str,
-    messages,
-):
-    stream = client.chat.completions.create(
+    messages: list[ChatCompletionMessageParam],
+) -> Stream[ChatCompletionChunk]:
+    return client.chat.completions.create(
         model=model,
         messages=messages,
         stream=True,
         reasoning_effort="medium",
     )
-    return stream
 
 
 def stream_response(
     stream: Stream[ChatCompletionChunk],
-) -> Generator[str, None, None]:
+) -> Iterator[str]:
     for chunk in stream:
         # 某些 chunk 可能没有 choices
         if not chunk.choices:
@@ -54,24 +70,3 @@ def stream_response(
         # delta.content 可能是 None。
         if delta.content:
             yield delta.content
-
-
-def stream_and_save(*, session: Session, conversation: Conversation, chunks):
-    collected_chunks: list[str] = []
-
-    for chunk in chunks:
-        if not chunk:
-            continue
-
-        collected_chunks.append(chunk)
-        yield chunk
-
-    full_content = "".join(collected_chunks)
-
-    if full_content:
-        save_message(
-            role=MessageRole.ASSISTANT,
-            conversation=conversation,
-            content=full_content,
-            session=session,
-        )
