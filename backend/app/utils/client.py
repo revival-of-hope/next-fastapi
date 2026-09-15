@@ -1,3 +1,4 @@
+from openai import OpenAI
 from app.utils.stream import (
     build_messages,
     stream_response,
@@ -15,10 +16,10 @@ DEFAULT_SYSTEM_PROMPT = "以后的回答都要优先输出一句话,我是deepse
 
 
 @lru_cache
-def get_client():
+def get_client() -> OpenAI:
     return create_client(
-        settings.DEEPSEEK_API_KEY,
-        settings.DEEPSEEK_URL,
+        api_key=settings.DEEPSEEK_API_KEY,
+        url=settings.DEEPSEEK_URL,
     )
 
 

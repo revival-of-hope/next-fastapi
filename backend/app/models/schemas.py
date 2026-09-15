@@ -1,4 +1,3 @@
-from enum import Enum
 from sqlmodel import SQLModel, Field
 from datetime import UTC, datetime
 from .tables import UserBase, MessageBase, ConversationBase
@@ -34,12 +33,6 @@ class ChatRequest(SQLModel):
     # 根据id是否为空可以判断是否为已有对话
     conversation_id: int | None = Field(default=None, ge=1)
     content: str = Field(min_length=1, max_length=20_000)
-
-
-# 用于判断消息类型,从而区分用户提问和AI回答
-class MessageRole(str, Enum):
-    USER = "user"
-    ASSISTANT = "assistant"
 
 
 # Token

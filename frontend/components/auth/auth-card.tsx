@@ -3,7 +3,14 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, ArrowRight, Bot, Eye, EyeOff, LoaderCircle } from "lucide-react"
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bot,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
@@ -32,8 +39,16 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
       setError("请输入用户名。")
       return
     }
-    if (password.length < 8 || password.length > 16) {
-      setError("密码长度应为 8–16 位。")
+    if (normalizedName.length > 30) {
+      setError("用户名不能超过 30 个字符。")
+      return
+    }
+    if (!password) {
+      setError("请输入密码。")
+      return
+    }
+    if (password.length > 15) {
+      setError("密码不能超过 15 个字符。")
       return
     }
     if (isRegister && password !== confirmPassword) {
@@ -53,8 +68,10 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
       setError(
         getApiErrorMessage(
           err,
-          isRegister ? "注册失败，请检查用户名后重试。" : "登录失败，请检查用户名和密码。",
-        ),
+          isRegister
+            ? "注册失败，请检查用户名后重试。"
+            : "登录失败，请检查用户名和密码。"
+        )
       )
     } finally {
       setLoading(false)
@@ -93,32 +110,38 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
 
         <form className="space-y-5" onSubmit={handleSubmit} noValidate>
           <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">用户名</label>
+            <label htmlFor="name" className="text-sm font-medium">
+              用户名
+            </label>
             <input
               id="name"
               name="name"
               autoComplete="username"
+              maxLength={30}
               value={name}
               onChange={(event) => setName(event.target.value)}
               disabled={loading}
               placeholder="输入用户名"
-              className="h-11 w-full rounded-xl border bg-background px-3.5 text-sm outline-none transition placeholder:text-muted-foreground/65 focus:border-primary/55 focus:ring-3 focus:ring-primary/10 disabled:opacity-60"
+              className="h-11 w-full rounded-xl border bg-background px-3.5 text-sm transition outline-none placeholder:text-muted-foreground/65 focus:border-primary/55 focus:ring-3 focus:ring-primary/10 disabled:opacity-60"
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">密码</label>
+            <label htmlFor="password" className="text-sm font-medium">
+              密码
+            </label>
             <div className="relative">
               <input
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
                 autoComplete={isRegister ? "new-password" : "current-password"}
+                maxLength={15}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 disabled={loading}
-                placeholder="8–16 位密码"
-                className="h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm outline-none transition placeholder:text-muted-foreground/65 focus:border-primary/55 focus:ring-3 focus:ring-primary/10 disabled:opacity-60"
+                placeholder="输入密码（最多 15 位）"
+                className="h-11 w-full rounded-xl border bg-background px-3.5 pr-11 text-sm transition outline-none placeholder:text-muted-foreground/65 focus:border-primary/55 focus:ring-3 focus:ring-primary/10 disabled:opacity-60"
               />
               <button
                 type="button"
@@ -126,24 +149,31 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
                 onClick={() => setShowPassword((value) => !value)}
                 className="absolute top-1/2 right-3 grid size-7 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
               >
-                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
               </button>
             </div>
           </div>
 
           {isRegister && (
             <div className="space-y-2">
-              <label htmlFor="confirm-password" className="text-sm font-medium">确认密码</label>
+              <label htmlFor="confirm-password" className="text-sm font-medium">
+                确认密码
+              </label>
               <input
                 id="confirm-password"
                 name="confirm-password"
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
+                maxLength={15}
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 disabled={loading}
                 placeholder="再次输入密码"
-                className="h-11 w-full rounded-xl border bg-background px-3.5 text-sm outline-none transition placeholder:text-muted-foreground/65 focus:border-primary/55 focus:ring-3 focus:ring-primary/10 disabled:opacity-60"
+                className="h-11 w-full rounded-xl border bg-background px-3.5 text-sm transition outline-none placeholder:text-muted-foreground/65 focus:border-primary/55 focus:ring-3 focus:ring-primary/10 disabled:opacity-60"
               />
             </div>
           )}
@@ -155,13 +185,18 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
               "overflow-hidden rounded-xl border px-3.5 text-sm leading-5 transition-all",
               error
                 ? "max-h-24 border-destructive/20 bg-destructive/5 py-2.5 text-destructive opacity-100"
-                : "max-h-0 border-transparent py-0 opacity-0",
+                : "max-h-0 border-transparent py-0 opacity-0"
             )}
           >
             {error || "占位"}
           </div>
 
-          <Button type="submit" size="lg" className="h-11 w-full rounded-xl" disabled={loading}>
+          <Button
+            type="submit"
+            size="lg"
+            className="h-11 w-full rounded-xl"
+            disabled={loading}
+          >
             {loading ? (
               <>
                 <LoaderCircle className="size-4 animate-spin" />

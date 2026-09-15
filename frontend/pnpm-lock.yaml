@@ -42,9 +42,6 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
     devDependencies:
-      '@hey-api/openapi-ts':
-        specifier: ^0.99.0
-        version: 0.99.0(typescript@5.9.3)
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.3

@@ -22,8 +22,8 @@ const features = [
   },
   {
     icon: MessageSquareText,
-    title: "历史记录",
-    description: "登录后自动读取你的历史回复，最近内容随时可回看。",
+    title: "完整对话记录",
+    description: "每次交流按会话归档，历史问题与回答都能随时继续。",
   },
   {
     icon: ShieldCheck,
@@ -36,22 +36,31 @@ export function LandingPage() {
   return (
     <main className="relative min-h-svh overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,color-mix(in_oklch,var(--primary)_15%,transparent),transparent_30%),radial-gradient(circle_at_80%_10%,color-mix(in_oklch,var(--chart-2)_10%,transparent),transparent_26%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] [background-size:42px_42px]" />
+      <div className="pointer-events-none absolute inset-0 [background-image:linear-gradient(to_right,currentColor_1px,transparent_1px),linear-gradient(to_bottom,currentColor_1px,transparent_1px)] [background-size:42px_42px] opacity-[0.035]" />
 
       <div className="relative mx-auto flex min-h-svh max-w-7xl flex-col px-5 sm:px-8 lg:px-10">
         <header className="flex h-20 items-center justify-between border-b border-border/60">
-          <Link href="/" className="flex items-center gap-2.5" aria-label="智能体首页">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5"
+            aria-label="智能体首页"
+          >
             <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
               <Bot className="size-5" />
             </span>
-            <span className="font-heading text-lg font-semibold tracking-tight">Agent Studio</span>
+            <span className="font-heading text-lg font-semibold tracking-tight">
+              Agent Studio
+            </span>
           </Link>
           <div className="flex items-center gap-1 sm:gap-2">
             <ThemeToggle />
             <Button asChild variant="ghost" className="rounded-full px-4">
               <Link href="/user/login">登录</Link>
             </Button>
-            <Button asChild className="rounded-full px-5 shadow-sm shadow-primary/20">
+            <Button
+              asChild
+              className="rounded-full px-5 shadow-sm shadow-primary/20"
+            >
               <Link href="/user/register">
                 注册
                 <ArrowRight className="size-4" />
@@ -71,23 +80,41 @@ export function LandingPage() {
               <span className="block text-primary">智能体工作空间</span>
             </h1>
             <p className="mt-7 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
-              从注册到对话保持在顺畅的单页体验中。无需复杂配置，创建账户后即可进入专属聊天空间，持续获得流式回答并回看历史内容。
+              从注册到对话保持在顺畅的体验中。创建账户后即可进入专属聊天空间，获得流式回答、切换历史会话并继续交流。
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="h-12 rounded-xl px-6 text-base shadow-lg shadow-primary/15">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 rounded-xl px-6 text-base shadow-lg shadow-primary/15"
+              >
                 <Link href="/user/register">
                   创建账户并开始
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="h-12 rounded-xl px-6 text-base">
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="h-12 rounded-xl px-6 text-base"
+              >
                 <Link href="/user/login">已有账户，直接登录</Link>
               </Button>
             </div>
             <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
-              <span className="flex items-center gap-2"><Braces className="size-4 text-primary" />Typed API client</span>
-              <span className="flex items-center gap-2"><ShieldCheck className="size-4 text-primary" />Bearer authentication</span>
-              <span className="flex items-center gap-2"><Zap className="size-4 text-primary" />Streaming response</span>
+              <span className="flex items-center gap-2">
+                <Braces className="size-4 text-primary" />
+                Typed API client
+              </span>
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="size-4 text-primary" />
+                Bearer authentication
+              </span>
+              <span className="flex items-center gap-2">
+                <Zap className="size-4 text-primary" />
+                Streaming response
+              </span>
             </div>
           </div>
 
@@ -98,7 +125,9 @@ export function LandingPage() {
                 <span className="size-2.5 rounded-full bg-foreground/15" />
                 <span className="size-2.5 rounded-full bg-foreground/10" />
                 <span className="size-2.5 rounded-full bg-foreground/10" />
-                <span className="ml-2 text-xs text-muted-foreground">agent / conversation</span>
+                <span className="ml-2 text-xs text-muted-foreground">
+                  agent / conversation
+                </span>
               </div>
               <div className="space-y-5 p-5 sm:p-7">
                 <div className="ml-auto max-w-[78%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-sm">
@@ -119,9 +148,16 @@ export function LandingPage() {
                     ["02", "自动登录"],
                     ["03", "开始对话"],
                   ].map(([number, label]) => (
-                    <div key={number} className="rounded-2xl border bg-muted/45 p-3.5">
-                      <div className="text-[11px] font-semibold text-primary">{number}</div>
-                      <div className="mt-1 text-xs font-medium sm:text-sm">{label}</div>
+                    <div
+                      key={number}
+                      className="rounded-2xl border bg-muted/45 p-3.5"
+                    >
+                      <div className="text-[11px] font-semibold text-primary">
+                        {number}
+                      </div>
+                      <div className="mt-1 text-xs font-medium sm:text-sm">
+                        {label}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -132,12 +168,17 @@ export function LandingPage() {
 
         <section className="grid gap-4 border-t border-border/60 py-8 md:grid-cols-3">
           {features.map(({ icon: Icon, title, description }) => (
-            <div key={title} className="group rounded-2xl border border-transparent p-4 transition-colors hover:border-border hover:bg-card/70">
+            <div
+              key={title}
+              className="group rounded-2xl border border-transparent p-4 transition-colors hover:border-border hover:bg-card/70"
+            >
               <div className="mb-3 grid size-9 place-items-center rounded-xl bg-primary/10 text-primary">
                 <Icon className="size-4.5" />
               </div>
               <h2 className="font-heading font-semibold">{title}</h2>
-              <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{description}</p>
+              <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                {description}
+              </p>
             </div>
           ))}
         </section>
