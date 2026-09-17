@@ -10,9 +10,36 @@ class UserRegister(SQLModel):
     password: str = Field(min_length=1, max_length=15)
 
 
+class UserUsagePublic(SQLModel):
+    """
+    单个用户统计
+    """
+
+    # 对话次数统计
+    messages_count: int = 0
+
+    # Token 统计
+    input_tokens: int = 0
+    output_tokens: int = 0
+    total_tokens: int = 0
+
+
+class UsagePublic(SQLModel):
+    """
+    总用户统计
+    """
+
+    messages_count: int = 0
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+    total_tokens: int = 0
+
+
 class UserPublic(UserBase):
-    id: int
+    user_id: int
     created_at: datetime
+    usage: UserUsagePublic | None = None
 
 
 class UsersPublic(SQLModel):

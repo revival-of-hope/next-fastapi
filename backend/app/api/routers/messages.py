@@ -2,8 +2,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
-from openai import OpenAIError
-
 from app import crud
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
@@ -13,12 +11,12 @@ from app.models import (
     Message,
     MessagePublic,
 )
-from app.utils.chat import (
+from app.agents.chat import (
     ConversationNotFoundError,
     prepare_chat,
     stream_and_save,
 )
-from app.utils.client import stream_agent
+from app.agents.client import stream_agent
 
 router = APIRouter(tags=["conversations"])
 

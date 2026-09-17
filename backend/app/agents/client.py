@@ -1,5 +1,5 @@
 from openai import OpenAI
-from app.utils.stream import (
+from app.agents.stream import (
     build_messages,
     stream_response,
     create_stream,

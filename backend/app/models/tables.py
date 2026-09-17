@@ -29,17 +29,24 @@ class User(UserBase, table=True):
         cascade_delete=True,
     )
 
+    usage: "UserUsage" = Relationship(back_populates="user", cascade_delete=True)
+
 
 class UserUsage(SQLModel, table=True):
     user_id: int = Field(
         foreign_key="user.user_id",
         primary_key=True,
     )
+
+    # 对话次数统计
     messages_count: int = 0
+
     # Token 统计
     input_tokens: int = 0
     output_tokens: int = 0
     total_tokens: int = 0
+
+    user: User = Relationship(back_populates="usage")
 
 
 # Conversation
