@@ -3,30 +3,43 @@ from sqlmodel import Relationship, SQLModel, Field, Text
 from datetime import UTC, datetime
 
 
+def get_datetime() -> datetime:
+    return datetime.now(UTC)
+
+
 # 用于判断消息类型,从而区分用户提问和AI回答
 class MessageRole(str, Enum):
     USER = "user"
     ASSISTANT = "assistant"
 
 
-def get_datetime() -> datetime:
-    return datetime.now(UTC)
-
-
 # User
 class UserBase(SQLModel):
     name: str = Field(min_length=1, max_length=30)
+    is_active: bool = True
+    is_superuser: bool = False
 
 
 class User(UserBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, primary_key=True)
     hashed_password: str = Field(max_length=256)
-    is_active: bool = True
     created_at: datetime = Field(default_factory=get_datetime)
     conversations: list["Conversation"] = Relationship(
         back_populates="user",
         cascade_delete=True,
     )
+
+
+class UserUsage(SQLModel, table=True):
+    user_id: int = Field(
+        foreign_key="user.user_id",
+        primary_key=True,
+    )
+    messages_count: int = 0
+    # Token 统计
+    input_tokens: int = 0
+    output_tokens: int = 0
+    total_tokens: int = 0
 
 
 # Conversation

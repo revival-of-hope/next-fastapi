@@ -35,7 +35,7 @@ def login_access_token(
     token_expires = timedelta(minutes=TOKEN_EXPIRE_MINUTES)
     return Token(
         access_token=security.create_token(
-            user.id,
+            user.user_id,
             expires_delta=token_expires,
         )
     )

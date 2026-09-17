@@ -1,18 +1,23 @@
 from sqlmodel import SQLModel, Field
-from datetime import UTC, datetime
+from datetime import datetime
 from .tables import UserBase, MessageBase, ConversationBase
 
 
 # User
+class UserRegister(SQLModel):
+    # 写成1是为了偷懒~
+    name: str = Field(min_length=1, max_length=30)
+    password: str = Field(min_length=1, max_length=15)
+
+
 class UserPublic(UserBase):
     id: int
     created_at: datetime
-    is_active: bool
 
 
-class UserRegister(UserBase):
-    # 写成1是为了偷懒~
-    password: str = Field(min_length=1, max_length=15)
+class UsersPublic(SQLModel):
+    data: list[UserPublic]
+    count: int
 
 
 # Message

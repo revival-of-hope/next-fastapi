@@ -1,5 +1,5 @@
 from app.core.security import verify_password, hashing_password
-from sqlmodel import Session, select, desc, asc
+from sqlmodel import Session, select, desc, asc, func
 from app.models import (
     Message,
     MessageRole,
@@ -8,6 +8,7 @@ from app.models import (
     Conversation,
     get_datetime,
 )
+from backend.app.models.schemas import UserPublic, UsersPublic
 
 # Dummy hash to use for timing attack prevention when user is not found
 DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$MjQyZWE1MzBjYjJlZTI0Yw$YTU4NGM5ZTZmYjE2NzZlZjY0ZWY3ZGRkY2U2OWFjNjk"
@@ -41,6 +42,17 @@ def check_user(*, session: Session, name: str, password: str) -> User | None:
     if not verified:
         return None
     return db_user
+
+
+def get_users(*, session: Session, offset: int, limit: int) -> UsersPublic:
+    count_statement = select(func.count()).select_from(User)
+    count = session.exec(count_statement).one()
+
+    statement = select(User).order_by(desc(User.created_at)).offset(offset).limit(limit)
+    users = session.exec(statement).all()
+
+    users_public = [UserPublic.model_validate(user) for user in users]
+    return UsersPublic(data=users_public, count=count)
 
 
 def create_conversation(
