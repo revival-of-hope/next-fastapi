@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Response
 from app.api.deps import SessionDep, CurrentUser, Superuser
 from app.models import User, UserPublic, UserRegister
 from app import crud
-from app.models.schemas import UsersPublic
+from app.models.schemas import UsagePublic, UsersPublic
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -30,21 +30,35 @@ def user_homepage(current_user: CurrentUser) -> User:
 # 获取用户列表
 @router.get("", response_model=UsersPublic)
 def read_users(
-    _: Superuser, session: SessionDep, skip: int, limit: int = 100
+    _: Superuser,
+    session: SessionDep,
+    skip: int,
+    limit: int = 100,
 ) -> UsersPublic:
     return crud.get_users(session=session, offset=skip, limit=limit)
 
 
+@router.get("/usage", response_model=UsagePublic)
+def read_usage(_: Superuser, session: SessionDep):
+    return crud.get_usage_totals(session=session)
+
+
 # 删除用户
 @router.delete("/{user_id}")
-def delete_user(current_user: Superuser, session: SessionDep, user_id: int) -> str:
+def delete_user(current_user: Superuser, session: SessionDep, user_id: int) -> Response:
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if user == current_user:
+    if user_id == current_user.user_id:
         raise HTTPException(
-            status_code=403, detail="Super users are not allowed to delete themselves"
+            status_code=403,
+            detail="Super users are not allowed to delete themselves",
         )
-    session.delete(user)
-    session.commit()
-    return "User deleted successfully"
+    try:
+        session.delete(user)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

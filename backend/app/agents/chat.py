@@ -1,9 +1,9 @@
 from collections.abc import Iterator
 
 from sqlmodel import Session
-
+from openai import Stream
+from openai.types.chat import ChatCompletionChunk
 from app import crud
-from app.core.db import engine
 from app.models import ChatRequest, Conversation, MessageRole
 
 TITLE_LENGTH = 10
@@ -56,25 +56,33 @@ def stream_and_save(
     *,
     session: Session,
     conversation_id: int,
-    chunks: Iterator[str],
+    chunks: Stream[ChatCompletionChunk],
 ) -> Iterator[str]:
     collected_chunks: list[str] = []
-
+    last_chunk: ChatCompletionChunk | None = None
     for chunk in chunks:
-        if not chunk:
+        last_chunk = chunk
+
+        if not chunk.choices:
             continue
-        collected_chunks.append(chunk)
-        yield chunk
+        content = chunk.choices[0].delta.content
+        if content:
+            collected_chunks.append(content)
+            yield content
 
     full_content = "".join(collected_chunks)
-
-    if full_content:
-
-        conversation = session.get(Conversation, conversation_id)
-        if conversation is not None:
-            crud.save_message(
-                session=session,
-                conversation=conversation,
-                role=MessageRole.ASSISTANT,
-                content=full_content,
-            )
+    if not full_content or not last_chunk or not last_chunk.usage:
+        return
+    usage = last_chunk.usage
+    conversation = session.get(Conversation, conversation_id)
+    if conversation is None:
+        return
+    crud.save_message(
+        session=session,
+        conversation=conversation,
+        role=MessageRole.ASSISTANT,
+        content=full_content,
+        input_tokens=usage.prompt_tokens,
+        output_tokens=usage.completion_tokens,
+        total_tokens=usage.total_tokens,
+    )

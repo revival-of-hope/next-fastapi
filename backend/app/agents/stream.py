@@ -53,20 +53,7 @@ def create_stream(
         messages=messages,
         stream=True,
         reasoning_effort="medium",
+        stream_options={
+            "include_usage": True,
+        },
     )
-
-
-def stream_response(
-    stream: Stream[ChatCompletionChunk],
-) -> Iterator[str]:
-    for chunk in stream:
-        # 某些 chunk 可能没有 choices
-        if not chunk.choices:
-            continue
-
-        # delta 表示“这一次新增的内容”。
-        delta = chunk.choices[0].delta
-
-        # delta.content 可能是 None。
-        if delta.content:
-            yield delta.content

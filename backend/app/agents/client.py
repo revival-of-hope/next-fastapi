@@ -1,7 +1,8 @@
-from openai import OpenAI
+from openai import OpenAI, Stream
+from openai.types.chat import ChatCompletionChunk
+
 from app.agents.stream import (
     build_messages,
-    stream_response,
     create_stream,
     create_client,
 )
@@ -9,7 +10,6 @@ from functools import lru_cache
 
 from app.models import Message
 from app.core.config import settings
-from collections.abc import Iterator
 
 DEFAULT_MODEL = "deepseek-v4-pro"
 DEFAULT_SYSTEM_PROMPT = "以后的回答都要优先输出一句话,我是deepseek-v4-pro."
@@ -28,7 +28,7 @@ def stream_agent(
     history: list[Message],
     model: str = DEFAULT_MODEL,
     system_prompt: str = DEFAULT_SYSTEM_PROMPT,
-) -> Iterator[str]:
+) -> Stream[ChatCompletionChunk]:
     # 构造消息列表
     message_list = build_messages(system_prompt=system_prompt, history=history)
 
@@ -38,4 +38,4 @@ def stream_agent(
         model=model,
         messages=message_list,
     )
-    return stream_response(stream)
+    return stream

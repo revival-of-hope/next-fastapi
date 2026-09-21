@@ -24,12 +24,12 @@ HISTORY_MESSAGE_LIMIT = 4
 
 
 def _current_user_id(current_user: CurrentUser) -> int:
-    if current_user.id is None:
+    if current_user.user_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authenticated user",
         )
-    return current_user.id
+    return current_user.user_id
 
 
 @router.get("/conversations", response_model=list[ConversationPublic])
@@ -99,7 +99,6 @@ def chat(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Conversation could not be created",
         )
-
     history = crud.get_history_message(
         session=session,
         conversation_id=conversation.conversation_id,

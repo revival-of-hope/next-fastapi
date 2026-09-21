@@ -15,7 +15,11 @@ class MessageRole(str, Enum):
 
 # User
 class UserBase(SQLModel):
-    name: str = Field(min_length=1, max_length=30)
+    name: str = Field(
+        min_length=1,
+        max_length=30,
+        index=True,
+    )
     is_active: bool = True
     is_superuser: bool = False
 
@@ -36,6 +40,7 @@ class UserUsage(SQLModel, table=True):
     user_id: int = Field(
         foreign_key="user.user_id",
         primary_key=True,
+        ondelete="CASCADE",
     )
 
     # 对话次数统计
@@ -57,7 +62,7 @@ class ConversationBase(SQLModel):
 class Conversation(ConversationBase, table=True):
     conversation_id: int | None = Field(default=None, primary_key=True)
 
-    user_id: int = Field(foreign_key="user.id")
+    user_id: int = Field(foreign_key="user.user_id")
     user: User | None = Relationship(back_populates="conversations")
 
     messages: list["Message"] = Relationship(
