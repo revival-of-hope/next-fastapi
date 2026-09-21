@@ -1,4 +1,3 @@
-from typing import Iterator, Sequence
 from openai import Stream, OpenAI
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
