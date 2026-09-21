@@ -11,12 +11,11 @@ from app.models import (
     Message,
     MessagePublic,
 )
-from app.agents.chat import (
-    ConversationNotFoundError,
-    prepare_chat,
-    stream_and_save,
-)
-from app.agents.client import stream_agent
+from app.agents.chat import ConversationNotFoundError, ChatBot
+from app.agents.client import Agent
+
+agent = Agent()
+chatbot = ChatBot()
 
 router = APIRouter(tags=["conversations"])
 
@@ -83,7 +82,7 @@ def chat(
     current_user: CurrentUser,
 ) -> StreamingResponse:
     try:
-        conversation = prepare_chat(
+        conversation = chatbot.prepare_chat(
             session=session,
             user_id=_current_user_id(current_user),
             request=request,
@@ -107,10 +106,10 @@ def chat(
         limit=HISTORY_MESSAGE_LIMIT + 1,
     )
 
-    chunks = stream_agent(history=history)
+    chunks = agent.stream_agent(history=history)
 
     return StreamingResponse(
-        stream_and_save(
+        chatbot.stream_and_save(
             session=session,
             conversation_id=conversation.conversation_id,
             chunks=chunks,
