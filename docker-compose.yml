@@ -8,21 +8,13 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
+    ports:
+      - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data/pgdata
     env_file:
       - .env
-  prestart:
-    build:
-      context: ./backend
-      dockerfile: dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
-        restart: true
-    command: bash scripts/prestart.sh
-    env_file:
-      - .env
+
   backend:
     restart: always
     build:
@@ -32,10 +24,10 @@ services:
       db:
         condition: service_healthy
         restart: true
-      prestart:
-        condition: service_completed_successfully
     env_file:
       - .env
+    environment:
+      POSTGRES_SERVER: db
     ports:
       - "8000:8000"
   frontend:
