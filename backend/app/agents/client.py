@@ -1,15 +1,14 @@
 from functools import lru_cache
+from typing import Literal
 
 from app.models import Message, MessageRole
 from app.core.config import settings
 
 from openai import Stream, OpenAI
-from openai.types.chat import (
-    ChatCompletionAssistantMessageParam,
-    ChatCompletionChunk,
-    ChatCompletionMessageParam,
-    ChatCompletionSystemMessageParam,
-    ChatCompletionUserMessageParam,
+from openai.types.responses import (
+    EasyInputMessageParam,
+    ResponseInputParam,
+    ResponseStreamEvent,
 )
 
 
@@ -30,46 +29,36 @@ class Agent:
         history: list[Message],
         model: str = DEFAULT_MODEL,
         system_prompt: str = DEFAULT_SYSTEM_PROMPT,
-    ) -> Stream[ChatCompletionChunk]:
+    ) -> Stream[ResponseStreamEvent]:
         # 构造消息列表
-        message_list = self._build_messages(
-            system_prompt=system_prompt, history=history
-        )
+        message_list = self._build_input(history=history)
 
         # 打开通信流
         stream = self._create_stream(
             client=self._get_client(),
             model=model,
-            messages=message_list,
+            instructions=system_prompt,
+            input=message_list,
         )
         return stream
-        # history代表历史消息
 
     @staticmethod
-    def _build_messages(
+    def _build_input(
         *,
-        system_prompt: str,
         history: list[Message],
-    ) -> list[ChatCompletionMessageParam]:
-        messages: list[ChatCompletionMessageParam] = [
-            ChatCompletionSystemMessageParam(role="system", content=system_prompt)
-        ]
+    ) -> ResponseInputParam:
+        response_input: ResponseInputParam = []
         for message in history:
-            if message.role is MessageRole.USER:
-                messages.append(
-                    ChatCompletionUserMessageParam(
-                        role="user",
-                        content=message.content,
-                    )
+            role: Literal["user", "assistant"] = (
+                "user" if message.role is MessageRole.USER else "assistant"
+            )
+            response_input.append(
+                EasyInputMessageParam(
+                    role=role,
+                    content=message.content,
                 )
-            else:
-                messages.append(
-                    ChatCompletionAssistantMessageParam(
-                        role="assistant",
-                        content=message.content,
-                    )
-                )
-        return messages
+            )
+        return response_input
 
     @staticmethod
     def _create_client(*, api_key: str, url: str) -> OpenAI:
@@ -80,14 +69,13 @@ class Agent:
         *,
         client: OpenAI,
         model: str,
-        messages: list[ChatCompletionMessageParam],
-    ) -> Stream[ChatCompletionChunk]:
-        return client.chat.completions.create(
+        instructions: str,
+        input: ResponseInputParam,
+    ) -> Stream[ResponseStreamEvent]:
+        return client.responses.create(
             model=model,
-            messages=messages,
+            instructions=instructions,
+            input=input,
             stream=True,
-            reasoning_effort="medium",
-            stream_options={
-                "include_usage": True,
-            },
+            reasoning={"effort": "high"},
         )

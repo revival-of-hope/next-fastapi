@@ -2,12 +2,9 @@ from collections.abc import Iterator
 
 from sqlmodel import Session
 from openai import Stream
-from openai.types.chat import ChatCompletionChunk
+from openai.types.responses import Response, ResponseStreamEvent
 from app import crud
 from app.models import ChatRequest, Conversation, MessageRole
-
-TITLE_LENGTH = 10
-DEFAULT_TITLE = "新对话"
 
 
 class ConversationNotFoundError(Exception):
@@ -15,14 +12,17 @@ class ConversationNotFoundError(Exception):
 
 
 class ChatBot:
+    TITLE_LENGTH = 10
+    DEFAULT_TITLE = "新对话"
+
     @staticmethod
     def _build_conversation_title(content: str) -> str:
 
         normalized_text = " ".join(content.split())
         if not normalized_text:
-            return DEFAULT_TITLE
+            return ChatBot.DEFAULT_TITLE
 
-        return normalized_text[:TITLE_LENGTH]
+        return normalized_text[: ChatBot.TITLE_LENGTH]
 
     def prepare_chat(
         self,
@@ -58,24 +58,28 @@ class ChatBot:
         *,
         session: Session,
         conversation_id: int,
-        chunks: Stream[ChatCompletionChunk],
+        chunks: Stream[ResponseStreamEvent],
     ) -> Iterator[str]:
         collected_chunks: list[str] = []
-        last_chunk: ChatCompletionChunk | None = None
-        for chunk in chunks:
-            last_chunk = chunk
-
-            if not chunk.choices:
-                continue
-            content = chunk.choices[0].delta.content
-            if content:
-                collected_chunks.append(content)
-                yield content
+        final_response: Response | None = None
+        for event in chunks:
+            if event.type == "response.output_text.delta":
+                collected_chunks.append(event.delta)
+                yield event.delta
+            elif event.type == "response.completed":
+                final_response = event.response
+            elif event.type == "response.incomplete":
+                final_response = event.response
+            elif event.type == "error":
+                raise RuntimeError(event.message)
+            elif event.type == "response.failed":
+                error = event.response.error
+                raise RuntimeError(error.message if error else "Response failed")
 
         full_content = "".join(collected_chunks)
-        if not full_content or not last_chunk or not last_chunk.usage:
+        if not full_content or not final_response or not final_response.usage:
             return
-        usage = last_chunk.usage
+        usage = final_response.usage
         conversation = session.get(Conversation, conversation_id)
         if conversation is None:
             return
@@ -84,7 +88,7 @@ class ChatBot:
             conversation=conversation,
             role=MessageRole.ASSISTANT,
             content=full_content,
-            input_tokens=usage.prompt_tokens,
-            output_tokens=usage.completion_tokens,
+            input_tokens=usage.input_tokens,
+            output_tokens=usage.output_tokens,
             total_tokens=usage.total_tokens,
         )
