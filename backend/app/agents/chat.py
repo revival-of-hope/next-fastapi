@@ -61,10 +61,23 @@ class ChatBot:
         chunks: Stream[ResponseStreamEvent],
     ) -> Iterator[str]:
         collected_chunks: list[str] = []
+        reasoning_chunks: list[str] = []
+        reasoning_started = False
+        answer_started = False
         final_response: Response | None = None
         for event in chunks:
             if event.type == "response.output_text.delta":
+                if not answer_started:
+                    if reasoning_started:
+                        yield "\n\n回答：\n"
+                    answer_started = True
                 collected_chunks.append(event.delta)
+                yield event.delta
+            elif event.type == "response.reasoning_text.delta":
+                if not reasoning_started:
+                    yield "思考：\n"
+                    reasoning_started = True
+                reasoning_chunks.append(event.delta)
                 yield event.delta
             elif event.type == "response.completed":
                 final_response = event.response
@@ -88,6 +101,7 @@ class ChatBot:
             conversation=conversation,
             role=MessageRole.ASSISTANT,
             content=full_content,
+            reasoning="".join(reasoning_chunks) or None,
             input_tokens=usage.input_tokens,
             output_tokens=usage.output_tokens,
             total_tokens=usage.total_tokens,

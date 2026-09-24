@@ -65,6 +65,7 @@ class ChatRequest(SQLModel):
     # 根据id是否为空可以判断是否为已有对话
     conversation_id: int | None = Field(default=None, ge=1)
     content: str = Field(min_length=1, max_length=20_000)
+    enable_reasoning: bool = True
 
 
 # Token

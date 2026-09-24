@@ -29,6 +29,7 @@ class Agent:
         history: list[Message],
         model: str = DEFAULT_MODEL,
         system_prompt: str = DEFAULT_SYSTEM_PROMPT,
+        enable_reasoning: bool = True,
     ) -> Stream[ResponseStreamEvent]:
         # 构造消息列表
         message_list = self._build_input(history=history)
@@ -39,6 +40,7 @@ class Agent:
             model=model,
             instructions=system_prompt,
             input=message_list,
+            enable_reasoning=enable_reasoning,
         )
         return stream
 
@@ -71,11 +73,16 @@ class Agent:
         model: str,
         instructions: str,
         input: ResponseInputParam,
+        enable_reasoning: bool = True,
     ) -> Stream[ResponseStreamEvent]:
         return client.responses.create(
             model=model,
             instructions=instructions,
             input=input,
             stream=True,
-            reasoning={"effort": "high"},
+            reasoning=(
+                {"effort": "high", "summary": "auto"}
+                if enable_reasoning
+                else {"effort": "none"}
+            ),
         )

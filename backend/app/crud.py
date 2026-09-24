@@ -150,6 +150,7 @@ def save_message(
     conversation: Conversation,
     role: MessageRole,
     content: str,
+    reasoning: str | None = None,
     input_tokens: int = 0,
     output_tokens: int = 0,
     total_tokens: int = 0,
@@ -161,13 +162,13 @@ def save_message(
         conversation_id=conversation.conversation_id,
         role=role,
         content=content,
+        reasoning=reasoning,
     )
     conversation.updated_at = get_datetime()
 
     if role == MessageRole.ASSISTANT:
         usage = session.get(UserUsage, conversation.user_id)
 
-        # 兼容还没有统计记录的旧用户
         if usage is None:
             usage = UserUsage(user_id=conversation.user_id)
             session.add(usage)

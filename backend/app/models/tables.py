@@ -89,6 +89,7 @@ class MessageBase(SQLModel):
     # sa_type表示强制让引擎把content的类型改为Text,
     # 从而可以支持存储AI输出的冗长文本
     content: str = Field(sa_type=Text, nullable=False)
+    reasoning: str | None = Field(default=None, sa_type=Text)
 
 
 class Message(MessageBase, table=True):

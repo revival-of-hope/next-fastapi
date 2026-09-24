@@ -106,7 +106,10 @@ def chat(
         limit=HISTORY_MESSAGE_LIMIT + 1,
     )
 
-    chunks = agent.stream_agent(history=history)
+    chunks = agent.stream_agent(
+        history=history,
+        enable_reasoning=request.enable_reasoning,
+    )
 
     return StreamingResponse(
         chatbot.stream_and_save(
