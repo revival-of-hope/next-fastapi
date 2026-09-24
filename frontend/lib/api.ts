@@ -1,21 +1,22 @@
+import { apiRoutes } from "@/lib/api/generated/routes"
 import type {
   ChatRequest,
   ConversationPublic,
   MessagePublic,
   Token,
+  UsagePublic,
   UserPublic,
+  UsersPublic,
 } from "@/lib/api-types"
 
-export const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"
-).replace(/\/$/, "")
-
+// Same-origin requests are forwarded by Next.js. This preserves streaming headers
+// and works when the backend runs on a Docker-only hostname.
+const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "")
 type ApiErrorBody = {
   detail?: string | Array<{ msg?: string }>
   message?: string
 }
-
-const errorTranslations: Record<string, string> = {
+const translations: Record<string, string> = {
   "Incorrect name or password": "用户名或密码错误。",
   "Inactive user": "当前账户已停用。",
   "Invalid credentials": "登录状态已失效，请重新登录。",
@@ -23,7 +24,6 @@ const errorTranslations: Record<string, string> = {
   "Name already exists": "用户名已存在。",
   "Conversation not found": "该对话不存在或无权访问。",
 }
-
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -34,54 +34,34 @@ export class ApiError extends Error {
     this.name = "ApiError"
   }
 }
-
-function localizeErrorMessage(message: string): string {
-  return errorTranslations[message] ?? message
-}
-
-function messageFromBody(body: unknown): string | null {
-  if (typeof body === "string" && body.trim()) {
-    return localizeErrorMessage(body.trim())
-  }
-
+function errorText(body: unknown): string | null {
+  if (typeof body === "string") return translations[body] ?? body
   if (!body || typeof body !== "object") return null
-
   const candidate = body as ApiErrorBody
-  if (typeof candidate.detail === "string" && candidate.detail.trim()) {
-    return localizeErrorMessage(candidate.detail.trim())
-  }
-  if (Array.isArray(candidate.detail)) {
-    const message = candidate.detail
-      .map((item) => item?.msg)
-      .filter((item): item is string => Boolean(item))
-      .join("；")
-    if (message) return message
-  }
-  if (typeof candidate.message === "string" && candidate.message.trim()) {
-    return localizeErrorMessage(candidate.message.trim())
-  }
-
-  return null
+  const detail = Array.isArray(candidate.detail)
+    ? candidate.detail
+        .map((item) => item.msg)
+        .filter(Boolean)
+        .join("；")
+    : candidate.detail
+  const message = detail || candidate.message
+  return message ? (translations[message] ?? message) : null
 }
-
-async function readResponseBody(response: Response): Promise<unknown> {
-  const text = await response.text()
-  if (!text) return null
-
+async function apiError(response: Response): Promise<ApiError> {
+  const raw = await response.text()
+  let body: unknown = raw
   try {
-    return JSON.parse(text) as unknown
+    body = JSON.parse(raw) as unknown
   } catch {
-    return text
+    /* plain text */
   }
+  return new ApiError(
+    errorText(body) ?? `请求失败（HTTP ${response.status}）`,
+    response.status,
+    body
+  )
 }
-
-async function createApiError(response: Response): Promise<ApiError> {
-  const body = await readResponseBody(response)
-  const message = messageFromBody(body) ?? `请求失败（HTTP ${response.status}）`
-  return new ApiError(message, response.status, body)
-}
-
-async function requestJson<T>(
+async function request<T>(
   path: string,
   init: RequestInit = {},
   token?: string
@@ -89,64 +69,52 @@ async function requestJson<T>(
   const headers = new Headers(init.headers)
   headers.set("Accept", "application/json")
   if (token) headers.set("Authorization", `Bearer ${token}`)
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers,
     cache: "no-store",
   })
-
-  if (!response.ok) throw await createApiError(response)
-  return (await response.json()) as T
+  if (!response.ok) throw await apiError(response)
+  if (response.status === 204) return undefined as T
+  return response.json() as Promise<T>
 }
-
 export function getApiErrorMessage(
   error: unknown,
   fallback = "请求失败，请稍后重试。"
 ): string {
-  if (error instanceof TypeError && error.message === "Failed to fetch") {
-    return "无法连接后端服务，请检查服务地址或网络状态。"
+  if (error instanceof TypeError && /fetch|network/i.test(error.message)) {
+    return "无法连接后端服务，请检查 API_BASE_URL 与后端运行状态。"
   }
-  if (error instanceof Error && error.message.trim()) return error.message
-  return messageFromBody(error) ?? fallback
+  return error instanceof Error ? error.message : (errorText(error) ?? fallback)
 }
-
 export function isAuthenticationError(error: unknown): boolean {
-  return (
-    error instanceof ApiError && (error.status === 401 || error.status === 403)
-  )
+  return error instanceof ApiError && [401, 403].includes(error.status)
 }
-
 export function registerUser(
   name: string,
   password: string
 ): Promise<UserPublic> {
-  return requestJson<UserPublic>("/api/users", {
+  return request<UserPublic>(apiRoutes.ApiUsersRegisterPost, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, password }),
   })
 }
-
 export function loginUser(name: string, password: string): Promise<Token> {
   const body = new URLSearchParams({
     username: name,
     password,
     grant_type: "password",
-    scope: "",
   })
-
-  return requestJson<Token>("/api/access-token", {
+  return request<Token>(apiRoutes.ApiAccessPost, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   })
 }
-
 export function getCurrentUser(token: string): Promise<UserPublic> {
-  return requestJson<UserPublic>("/api/users/me", {}, token)
+  return request<UserPublic>(apiRoutes.ApiUsersMeGet, {}, token)
 }
-
 export function getConversations(
   token: string,
   options: { offset?: number; limit?: number } = {}
@@ -155,13 +123,12 @@ export function getConversations(
     offset: String(options.offset ?? 0),
     limit: String(options.limit ?? 100),
   })
-  return requestJson<ConversationPublic[]>(
-    `/api/conversations?${query}`,
+  return request<ConversationPublic[]>(
+    `${apiRoutes.ApiConversationsGet}?${query}`,
     {},
     token
   )
 }
-
 export function getMessages(
   token: string,
   conversationId: number,
@@ -172,26 +139,49 @@ export function getMessages(
     offset: String(options.offset ?? 0),
     limit: String(options.limit ?? 200),
   })
-  return requestJson<MessagePublic[]>(`/api/messages?${query}`, {}, token)
+  return request<MessagePublic[]>(
+    `${apiRoutes.ApiMessagesGet}?${query}`,
+    {},
+    token
+  )
 }
-
 export async function streamChat(
   token: string,
-  request: ChatRequest,
+  payload: ChatRequest,
   signal?: AbortSignal
 ): Promise<Response> {
-  const response = await fetch(`${API_BASE_URL}/api/messages`, {
+  const response = await fetch(`${BASE_URL}${apiRoutes.ApiMessagesPost}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "text/plain",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(request),
+    body: JSON.stringify(payload),
     cache: "no-store",
     signal,
   })
-
-  if (!response.ok) throw await createApiError(response)
+  if (!response.ok) throw await apiError(response)
   return response
+}
+export function getUsers(
+  token: string,
+  skip = 0,
+  limit = 100
+): Promise<UsersPublic> {
+  return request<UsersPublic>(
+    `${apiRoutes.ApiUsersGet}?${new URLSearchParams({ skip: String(skip), limit: String(limit) })}`,
+    {},
+    token
+  )
+}
+export function getUsage(token: string): Promise<UsagePublic> {
+  return request<UsagePublic>(apiRoutes.ApiUsersUsageGet, {}, token)
+}
+export function deleteUser(token: string, id: number): Promise<void> {
+  return request<void>(
+    apiRoutes.ApiUsersByuserDelete.replace("{user_id}", String(id)),
+    { method: "DELETE" },
+    token
+  )
 }

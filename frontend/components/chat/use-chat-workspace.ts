@@ -24,6 +24,7 @@ export type UiMessage = {
   role: MessageRole
   content: string
   createdAt?: string
+  reasoning?: string | null
   status?: "streaming" | "interrupted" | "failed"
 }
 
@@ -33,6 +34,7 @@ function toUiMessages(messages: MessagePublic[]): UiMessage[] {
     role: message.role,
     content: message.content,
     createdAt: message.created_at,
+    reasoning: message.reasoning,
   }))
 }
 
@@ -64,6 +66,8 @@ export function useChatWorkspace() {
   const [refreshingConversations, setRefreshingConversations] =
     React.useState(false)
   const [sending, setSending] = React.useState(false)
+  const [enableReasoning, setEnableReasoning] = React.useState(true)
+  const [hasMoreConversations, setHasMoreConversations] = React.useState(false)
   const [error, setError] = React.useState("")
   const tokenRef = React.useRef<string | null>(null)
   const abortRef = React.useRef<AbortController | null>(null)
@@ -90,6 +94,7 @@ export function useChatWorkspace() {
       try {
         const items = await getConversations(accessToken, { limit: 100 })
         setConversations(items)
+        setHasMoreConversations(items.length === 100)
         return items
       } finally {
         setRefreshingConversations(false)
@@ -119,22 +124,7 @@ export function useChatWorkspace() {
 
         setUser(currentUser)
         setConversations(conversationItems)
-
-        const firstConversation = conversationItems[0]
-        if (!firstConversation) return
-
-        setActiveConversationId(firstConversation.conversation_id)
-        setLoadingMessages(true)
-        try {
-          const storedMessages = await getMessages(
-            authenticatedToken,
-            firstConversation.conversation_id,
-            { limit: 200 }
-          )
-          if (active) setMessages(toUiMessages(storedMessages))
-        } finally {
-          if (active) setLoadingMessages(false)
-        }
+        setHasMoreConversations(conversationItems.length === 100)
       } catch (requestError) {
         if (!active || handleAuthenticationError(requestError)) return
         setError(
@@ -165,9 +155,16 @@ export function useChatWorkspace() {
       setLoadingMessages(true)
 
       try {
-        const storedMessages = await getMessages(accessToken, conversationId, {
-          limit: 200,
-        })
+        const storedMessages: MessagePublic[] = []
+        // The API returns oldest first, so fetch all pages for long conversations.
+        while (true) {
+          const page = await getMessages(accessToken, conversationId, {
+            offset: storedMessages.length,
+            limit: 200,
+          })
+          storedMessages.push(...page)
+          if (page.length < 200) break
+        }
         if (messageRequestRef.current === requestId) {
           setMessages(toUiMessages(storedMessages))
         }
@@ -191,6 +188,38 @@ export function useChatWorkspace() {
     setLoadingMessages(false)
     setError("")
   }, [sending])
+
+  const loadMoreConversations = React.useCallback(async () => {
+    const token = tokenRef.current
+    if (!token || refreshingConversations || !hasMoreConversations) return
+    setRefreshingConversations(true)
+    try {
+      const page = await getConversations(token, {
+        offset: conversations.length,
+        limit: 100,
+      })
+      setConversations((current) => [
+        ...current,
+        ...page.filter(
+          (item) =>
+            !current.some(
+              (existing) => existing.conversation_id === item.conversation_id
+            )
+        ),
+      ])
+      setHasMoreConversations(page.length === 100)
+    } catch (requestError) {
+      if (!handleAuthenticationError(requestError))
+        setError(getApiErrorMessage(requestError))
+    } finally {
+      setRefreshingConversations(false)
+    }
+  }, [
+    conversations.length,
+    handleAuthenticationError,
+    hasMoreConversations,
+    refreshingConversations,
+  ])
 
   const sendMessage = React.useCallback(
     async (rawContent: string) => {
@@ -248,6 +277,7 @@ export function useChatWorkspace() {
           {
             conversation_id: conversationIdAtSend,
             content,
+            enable_reasoning: enableReasoning,
           },
           controller.signal
         )
@@ -337,6 +367,7 @@ export function useChatWorkspace() {
     },
     [
       activeConversationId,
+      enableReasoning,
       handleAuthenticationError,
       refreshConversations,
       sending,
@@ -368,6 +399,10 @@ export function useChatWorkspace() {
     loadingMessages,
     refreshingConversations,
     sending,
+    enableReasoning,
+    setEnableReasoning,
+    hasMoreConversations,
+    loadMoreConversations,
     error,
     clearError: () => setError(""),
     openConversation,

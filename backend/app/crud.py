@@ -42,7 +42,7 @@ def register_user(*, session: Session, user_register: UserRegister) -> User:
 
 
 def get_user_by_name(*, session: Session, name: str) -> User | None:
-    return session.get(User, name)
+    return session.exec(select(User).where(User.name == name)).first()
 
 
 def check_user(*, session: Session, name: str, password: str) -> User | None:
