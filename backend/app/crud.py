@@ -11,13 +11,15 @@ from app.models import (
     UsagePublic,
     get_datetime,
 )
-from app.models.schemas import UserPublic, UsersPublic
+from app.models.schemas import UserCreate, UserPublic, UsersPublic
 
 # Dummy hash to use for timing attack prevention when user is not found
 DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$MjQyZWE1MzBjYjJlZTI0Yw$YTU4NGM5ZTZmYjE2NzZlZjY0ZWY3ZGRkY2U2OWFjNjk"
 
 
-def register_user(*, session: Session, user_register: UserRegister) -> User:
+def register_user(
+    *, session: Session, user_register: UserRegister | UserCreate
+) -> User:
     user = User.model_validate(
         user_register,
         update={"hashed_password": hashing_password(user_register.password)},

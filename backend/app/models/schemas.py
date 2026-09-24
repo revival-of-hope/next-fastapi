@@ -10,6 +10,10 @@ class UserRegister(SQLModel):
     password: str = Field(min_length=1, max_length=15)
 
 
+class UserCreate(UserBase):
+    password: str = Field(min_length=1, max_length=15)
+
+
 class UserUsagePublic(SQLModel):
     """
     单个用户统计

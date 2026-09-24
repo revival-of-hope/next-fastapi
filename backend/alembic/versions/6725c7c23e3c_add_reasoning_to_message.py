@@ -1,8 +1,8 @@
-"""add user avatar
+"""add reasoning to message
 
-Revision ID: 7c93231a9cc2
+Revision ID: 6725c7c23e3c
 Revises: 
-Create Date: 2026-09-21 13:50:53.682258+00:00
+Create Date: 2026-09-24 07:47:20.567830+00:00
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = '7c93231a9cc2'
+revision: str = '6725c7c23e3c'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -54,6 +54,7 @@ def upgrade() -> None:
     sa.Column('conversation_id', sa.Integer(), nullable=True),
     sa.Column('role', sa.Enum('USER', 'ASSISTANT', name='messagerole'), nullable=False),
     sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('reasoning', sa.Text(), nullable=True),
     sa.Column('message_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['conversation_id'], ['conversation.conversation_id'], ondelete='CASCADE'),

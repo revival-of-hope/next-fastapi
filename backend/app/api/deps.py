@@ -8,12 +8,11 @@ from app.models import User
 from app.models import TokenPayload
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
-
-
+from pydantic import ValidationError
 import jwt
 from jwt.exceptions import InvalidTokenError
 from app.core.config import settings
-from pydantic import ValidationError
+from app.core.security import ALGORITHM
 
 oauth2 = OAuth2PasswordBearer(
     tokenUrl="/api/access-token",
@@ -21,8 +20,6 @@ oauth2 = OAuth2PasswordBearer(
 )
 
 TokenDep = Annotated[str, Depends(oauth2)]
-
-ALGORITHM = "HS256"
 
 
 def get_db() -> Generator[Session, None, None]:

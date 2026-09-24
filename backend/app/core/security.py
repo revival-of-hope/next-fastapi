@@ -4,10 +4,10 @@ from datetime import datetime, UTC
 import jwt
 
 from pwdlib import PasswordHash
-from app.api.deps import ALGORITHM
 from app.core.config import settings
 
 hash_method = PasswordHash.recommended()
+ALGORITHM = "HS256"
 
 
 def create_token(subject: str | Any, expires_delta: timedelta) -> str:

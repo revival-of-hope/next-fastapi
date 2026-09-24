@@ -7,12 +7,16 @@
 有多个分支,每一章节都有一个对应仓库,动态更新中,预计9月份完结.
 
 ## 一键启动
-填入API Key:
+copy env文件后填入API Key:
 ```bash
 cp .env.example .env
 ```
 
 docker compose启动:
 ```bash
-docker compose up -d --build
+docker compose up -d --build 
+
+docker compose exec backend alembic revision --autogenerate -m "initial data"
+
+docker compose exec backend bash scripts/prestart.sh
 ```

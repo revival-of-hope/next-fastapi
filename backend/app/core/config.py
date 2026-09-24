@@ -16,6 +16,9 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str
 
+    SUPERUSER_NAME: str
+    SUPERUSER_PASSWORD: str
+
     POSTGRES_SERVER: str
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str
