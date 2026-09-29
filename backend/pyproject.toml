@@ -12,6 +12,7 @@ dependencies = [
     "pwdlib[argon2,bcrypt]>=0.3.0",
     "pydantic-settings>=2.14.1",
     "pyjwt>=2.13.0",
+    "scalar-fastapi>=1.9.1",
     "sqlmodel>=0.0.38",
     "uvicorn>=0.48.0",
 ]
@@ -19,8 +20,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "mypy>=2.3.1",
-    "pyright>=1.1.414",
     "pytest>=9.0.3",
     "ruff>=0.15.14",
-    "ty>=0.0.82",
+    "schemathesis>=4.28.0",
 ]

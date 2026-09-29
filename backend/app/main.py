@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from app.api.main import api_router
 from starlette.middleware.cors import CORSMiddleware
+from scalar_fastapi import add_scalar_reference
 
 app = FastAPI(
     title="demo",
@@ -23,6 +24,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+add_scalar_reference(app)
 
 
 def main():
