@@ -12,7 +12,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
     DEEPSEEK_API_KEY: str = ""
-    DEEPSEEK_URL: str = "https://api.deepseek.com"
+    MODEL_NAME: str = "deepseek-v4-pro"
+    MODEL_URL: str = "https://api.deepseek.com"
+    DEFAULT_SYSTEM_PROMPT: str = "以后的回答都要优先输出一句话,我是deepseek-v4-pro."
 
     SECRET_KEY: str
 

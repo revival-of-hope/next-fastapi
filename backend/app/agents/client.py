@@ -13,22 +13,20 @@ from openai.types.responses import (
 
 
 class Agent:
-    DEFAULT_MODEL = "deepseek-v4-pro"
-    DEFAULT_SYSTEM_PROMPT = "以后的回答都要优先输出一句话,我是deepseek-v4-pro."
 
     @lru_cache
     def _get_client(self) -> OpenAI:
         return self._create_client(
             api_key=settings.DEEPSEEK_API_KEY,
-            url=settings.DEEPSEEK_URL,
+            url=settings.MODEL_URL,
         )
 
     def stream_agent(
         self,
         *,
         history: list[Message],
-        model: str = DEFAULT_MODEL,
-        system_prompt: str = DEFAULT_SYSTEM_PROMPT,
+        model: str = settings.MODEL_NAME,
+        system_prompt: str = settings.DEFAULT_SYSTEM_PROMPT,
         enable_reasoning: bool = True,
     ) -> Stream[ResponseStreamEvent]:
         # 构造消息列表
