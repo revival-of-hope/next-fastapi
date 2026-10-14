@@ -1,10 +1,6 @@
 from enum import Enum
 from sqlmodel import Relationship, SQLModel, Field, Text
-from datetime import UTC, datetime
-
-
-def get_datetime() -> datetime:
-    return datetime.now(UTC)
+from tools import datetime, get_datetime
 
 
 # 用于判断消息类型,从而区分用户提问和AI回答
