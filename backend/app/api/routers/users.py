@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Response
 from app.api.deps import SessionDep, CurrentUser, Superuser
 from app.models import User, UserPublic, UserRegister
 from app import crud
-from app.models.schemas import UsagePublic, UsersPublic
+from app.domain.schemas import UsagePublic, UsersPublic
 
 router = APIRouter(prefix="/users", tags=["users"])
 

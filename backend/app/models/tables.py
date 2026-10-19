@@ -10,7 +10,7 @@ class MessageRole(str, Enum):
 
 
 # User
-class UserBase(SQLModel):
+class UserRecord(SQLModel, table=True):
     name: str = Field(
         min_length=1,
         max_length=30,
@@ -18,21 +18,18 @@ class UserBase(SQLModel):
     )
     is_active: bool = True
     is_superuser: bool = False
-
-
-class User(UserBase, table=True):
     user_id: int | None = Field(default=None, primary_key=True)
     hashed_password: str = Field(max_length=256)
     created_at: datetime = Field(default_factory=get_datetime)
-    conversations: list["Conversation"] = Relationship(
+    conversations: list["ConversationRecord"] = Relationship(
         back_populates="user",
         cascade_delete=True,
     )
 
-    usage: "UserUsage" = Relationship(back_populates="user", cascade_delete=True)
+    usage: "UserUsageRecord" = Relationship(back_populates="user", cascade_delete=True)
 
 
-class UserUsage(SQLModel, table=True):
+class UserUsageRecord(SQLModel, table=True):
     user_id: int = Field(
         foreign_key="user.user_id",
         primary_key=True,
@@ -47,21 +44,18 @@ class UserUsage(SQLModel, table=True):
     output_tokens: int = 0
     total_tokens: int = 0
 
-    user: User = Relationship(back_populates="usage")
+    user: UserRecord = Relationship(back_populates="usage")
 
 
 # Conversation
-class ConversationBase(SQLModel):
+class ConversationRecord(SQLModel, table=True):
     title: str | None = Field(default="新对话", min_length=1, max_length=120)
-
-
-class Conversation(ConversationBase, table=True):
     conversation_id: int | None = Field(default=None, primary_key=True)
 
     user_id: int = Field(foreign_key="user.user_id")
-    user: User | None = Relationship(back_populates="conversations")
+    user: UserRecord | None = Relationship(back_populates="conversations")
 
-    messages: list["Message"] = Relationship(
+    messages: list["MessageRecord"] = Relationship(
         back_populates="conversation",
         cascade_delete=True,
     )
@@ -74,9 +68,7 @@ class Conversation(ConversationBase, table=True):
 
 
 # Message
-
-
-class MessageBase(SQLModel):
+class MessageRecord(SQLModel, table=True):
     conversation_id: int | None = Field(
         foreign_key="conversation.conversation_id",
         ondelete="CASCADE",
@@ -87,13 +79,11 @@ class MessageBase(SQLModel):
     content: str = Field(sa_type=Text, nullable=False)
     reasoning: str | None = Field(default=None, sa_type=Text)
 
-
-class Message(MessageBase, table=True):
     message_id: int = Field(
         default=None,
         primary_key=True,
     )
     created_at: datetime = Field(default_factory=get_datetime)
-    conversation: Conversation | None = Relationship(
+    conversation: ConversationRecord | None = Relationship(
         back_populates="messages",
     )

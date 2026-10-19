@@ -1,2 +1,2 @@
 from .tables import *
-from .schemas import *
+from .mappers import mapper
