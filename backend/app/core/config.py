@@ -14,7 +14,12 @@ class Settings(BaseSettings):
     DEEPSEEK_API_KEY: str = ""
     MODEL_NAME: str = "deepseek-v4-pro"
     MODEL_URL: str = "https://api.deepseek.com"
+
     DEFAULT_SYSTEM_PROMPT: str = "以后的回答都要优先输出一句话,我是deepseek-v4-pro."
+
+    TITLE_LENGTH = 10
+    DEFAULT_TITLE = "新对话"
+    MESSAGE_LIMIT: int = 100
 
     SECRET_KEY: str
 

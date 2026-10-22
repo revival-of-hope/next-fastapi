@@ -66,6 +66,10 @@ class MessagePublic(BaseModel):
     created_at: datetime
 
 
+class MessagesPublic(BaseModel):
+    data: list[MessagePublic]
+
+
 # Conversation
 class ConversationPublic(BaseModel):
     title: str | None = Field(

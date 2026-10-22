@@ -1,12 +1,7 @@
 from enum import Enum
 from sqlmodel import Relationship, SQLModel, Field, Text
 from tools import datetime, get_datetime
-
-
-# 用于判断消息类型,从而区分用户提问和AI回答
-class MessageRole(str, Enum):
-    USER = "user"
-    ASSISTANT = "assistant"
+from domain.models import MessageRole
 
 
 # User

@@ -3,14 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from app import crud
-from app.api.deps import CurrentUser, SessionDep
-from app.models import (
-    ChatRequest,
-    Conversation,
-    ConversationPublic,
-    Message,
-    MessagePublic,
-)
+from backend.app.services.deps import CurrentUser, SessionDep
+
+from app.domain.schemas import ChatRequest
 from app.agents.chat import ConversationNotFoundError, ChatBot
 from app.agents.client import Agent
 

@@ -5,6 +5,7 @@ from openai import Stream
 from openai.types.responses import Response, ResponseStreamEvent
 from app import crud
 from app.models import ChatRequest, Conversation, MessageRole
+from app.core.config import settings
 
 
 class ConversationNotFoundError(Exception):
@@ -12,17 +13,15 @@ class ConversationNotFoundError(Exception):
 
 
 class ChatBot:
-    TITLE_LENGTH = 10
-    DEFAULT_TITLE = "新对话"
 
     @staticmethod
     def _build_conversation_title(content: str) -> str:
 
         normalized_text = " ".join(content.split())
         if not normalized_text:
-            return ChatBot.DEFAULT_TITLE
+            return settings.DEFAULT_TITLE
 
-        return normalized_text[: ChatBot.TITLE_LENGTH]
+        return normalized_text[: settings.TITLE_LENGTH]
 
     def prepare_chat(
         self,

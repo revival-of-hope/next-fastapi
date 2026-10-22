@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Response
-from app.api.deps import SessionDep, CurrentUser, Superuser
+from backend.app.services.deps import SessionDep, CurrentUser, Superuser
 from app.models import User, UserPublic, UserRegister
 from app import crud
 from app.domain.schemas import UsagePublic, UsersPublic

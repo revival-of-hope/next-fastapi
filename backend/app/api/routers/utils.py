@@ -3,7 +3,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from app.crud import check_user
-from app.api.deps import SessionDep
+from backend.app.services.deps import SessionDep
 from app.models import Token
 from app.core import security
 
