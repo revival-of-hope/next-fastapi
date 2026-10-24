@@ -2,10 +2,10 @@ from sqlmodel import Session, select, func
 from app.models import UserRecord
 from app.domain.models import MessageRole, TokenUsage, UserUsage
 from app.domain.schemas import UsagePublic
+from app.core.config import settings
 
 # Dummy hash to use for timing attack prevention when user is not found
 DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$MjQyZWE1MzBjYjJlZTI0Yw$YTU4NGM5ZTZmYjE2NzZlZjY0ZWY3ZGRkY2U2OWFjNjk"
-HISTORY_MESSAGE_LIMIT = 4
 
 
 def users_amount(session: Session) -> int:
@@ -13,6 +13,15 @@ def users_amount(session: Session) -> int:
 
     amount = session.exec(statement).one()
     return amount
+
+
+def build_conversation_title(content: str) -> str:
+
+    normalized_text = " ".join(content.split())
+    if not normalized_text:
+        return settings.DEFAULT_TITLE
+
+    return normalized_text[: settings.TITLE_LENGTH]
 
 
 def _add_tokens(userusage: UserUsage, usage: TokenUsage) -> None:
@@ -24,7 +33,7 @@ def _add_tokens(userusage: UserUsage, usage: TokenUsage) -> None:
 def add_usage(userusage: UserUsage, usage: TokenUsage, role: MessageRole) -> None:
     if role == MessageRole.ASSISTANT:
         _add_tokens(userusage, usage)
-    userusage.messages_count += 1
+    userusage.messages_count += 2
 
 
 def get_usage_totals(session: Session) -> UsagePublic:

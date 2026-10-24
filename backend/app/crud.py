@@ -35,7 +35,7 @@ def register_user(*, session: Session, user_register: UserRegister) -> User:
 
     except Exception:
         session.rollback()
-        raise
+        raise Exception
 
     session.refresh(user)
     return user
@@ -183,7 +183,7 @@ def save_message(
         session.commit()
     except Exception:
         session.rollback()
-        raise
+        raise Exception
 
     session.refresh(message)
     return message

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from tools import datetime
-from app.domain.models import MessageRole
+from app.domain.models import MessageRole, TokenUsage
 
 
 # User
@@ -86,11 +86,10 @@ class ConversationsPublic(BaseModel):
     data: list[ConversationPublic]
 
 
-# Request
-class ChatRequest(BaseModel):
-    conversation_id: int | None = Field(default=None, ge=1)
-    content: str = Field(min_length=1, max_length=20_000)
-    enable_reasoning: bool = True
+# Agent
+class ResponsePublic(BaseModel):
+    output_text: str
+    usage: TokenUsage
 
 
 # Token

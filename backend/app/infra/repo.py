@@ -2,19 +2,44 @@ from abc import abstractmethod, ABC
 from sqlmodel import Session, select, desc
 from sqlalchemy.orm import selectinload
 
+from app.domain.exceptions import (
+    AddError,
+    CommitError,
+    ConversationRecordCreateError,
+    ConversationRecordNotFound,
+    ConversationsRecordNotFound,
+    DbException,
+    DeleteError,
+    UserAddError,
+    UserDeleteError,
+    UserNameNotFound,
+    UserRecordCreateFailed,
+    UserRecordDeleteError,
+    UserRecordNotFound,
+    UsersRecordNotFound,
+    VerifyError,
+)
 from app.domain.models import Conversation, MessageRole, TokenUsage, User, UserUsage
 from app.domain.schemas import (
     ConversationPublic,
     ConversationsPublic,
     MessagePublic,
     MessagesPublic,
+    UsagePublic,
     UserPublic,
     UsersPublic,
     UserRegister,
 )
 from app.models import UserRecord, mapper, ConversationRecord, MessageRecord
 from app.core.security import verify_password, hashing_password
-from app.infra.datas import add_usage, users_amount, DUMMY_HASH, HISTORY_MESSAGE_LIMIT
+from app.core.config import settings
+from app.infra.datas import (
+    add_usage,
+    get_usage_totals,
+    users_amount,
+    build_conversation_title,
+    DUMMY_HASH,
+)
 from app.tools import get_datetime
 
 
@@ -35,10 +60,11 @@ class AbstractRepo(ABC):
 class UserRepo(AbstractRepo):
     def get(self, name: str) -> User | None:
         statement = select(UserRecord).where(UserRecord.name == name)
+
         userrecord = self._session.exec(statement).one()
 
         if userrecord is None:
-            raise
+            raise UserRecordNotFound("User Record Not Found")
 
         return mapper(userrecord, User)
 
@@ -54,6 +80,9 @@ class UserRepo(AbstractRepo):
             .limit(limit)
         )
         users = self._session.exec(statement).all()
+
+        if not users:
+            raise UsersRecordNotFound("Users Record Not Found")
 
         users_public: list = []
         for user in users:
@@ -74,10 +103,9 @@ class UserRepo(AbstractRepo):
             self._session.add(user)
             self._session.flush()
             if user.user_id is None:
-                raise Exception
-            usage = UserUsage(user_id=user.user_id)
+                raise UserRecordCreateFailed("User Record Create Failed")
 
-        except Exception:
+        except UserRecordCreateFailed:
             self._session.rollback()
             raise
 
@@ -88,38 +116,42 @@ class UserRepo(AbstractRepo):
         userrecord = self._session.get(UserRecord, user_id)
 
         if not userrecord:
-            raise
+            raise UsersRecordNotFound("Users Record Not Found")
         try:
             self._session.delete(userrecord)
             self._session.commit()
-        except:
+        except CommitError, DeleteError:
             self._session.rollback()
-            raise
+            raise UserRecordDeleteError("user record delete failed")
 
     def check(self, name: str, password: str) -> int | None:
         db_user = self.get(name)
 
         if db_user is None:
             verify_password(password, DUMMY_HASH)
-            raise Exception
+            raise UserNameNotFound("Username Not Found")
 
         verified = verify_password(password, db_user.hashed_password)
         if not verified:
-            raise Exception
+            raise VerifyError("vecification failed")
 
         return db_user.user_id
 
 
 class ConversationRepo(AbstractRepo):
-    def get(self, conversation_id: int, user_id: int):
+    def get(self, conversation_id: int, user_id: int) -> Conversation:
         statement = select(ConversationRecord).where(
             ConversationRecord.conversation_id == conversation_id,
             ConversationRecord.user_id == user_id,
         )
         conversation = self._session.exec(statement).one()
+        if not conversation:
+            raise ConversationRecordNotFound("Conversation Record Not Found")
         return mapper(conversation, Conversation)
 
-    def get_all(self, user_id: int, offset=0, limit: int = 50) -> ConversationsPublic:
+    def get_all(
+        self, user_id: int, offset: int = 0, limit: int = 50
+    ) -> ConversationsPublic:
         statement = (
             select(ConversationRecord)
             .where(ConversationRecord.user_id == user_id)
@@ -131,16 +163,34 @@ class ConversationRepo(AbstractRepo):
             .limit(limit)
         )
         results = self._session.exec(statement).all()
+        if not results:
+            raise ConversationsRecordNotFound("Conversations Record Not Found")
         lists = [mapper(result, ConversationPublic) for result in results]
         return ConversationsPublic(data=lists)
 
-    def post(self, user_id: int, title: str) -> ConversationPublic:
+    def post(self, user_id: int, content: str) -> ConversationPublic:
+        title = build_conversation_title(content)
         conversation = ConversationRecord(user_id=user_id, title=title)
+        try:
+            self._session.add(conversation)
+            self._session.commit()
+            self._session.refresh(conversation)
+        except AddError, CommitError:
+            raise ConversationRecordCreateError("Conversation record create failed")
 
-        self._session.add(conversation)
-        self._session.commit()
-        self._session.refresh(conversation)
         return ConversationPublic.model_validate(conversation)
+
+    def update_title(self, conversation_id: int, title: str) -> None:
+        conversationrecord = self._session.get(ConversationRecord, conversation_id)
+        if not conversationrecord:
+            raise Exception
+        conversationrecord.title = title
+        try:
+            self._session.add(conversationrecord)
+            self._session.commit()
+        except:
+            self._session.rollback()
+            raise Exception
 
     def post_usage(
         self, user_id: int, tokenusage: TokenUsage, role: MessageRole
@@ -159,14 +209,12 @@ class ConversationRepo(AbstractRepo):
         conversation_id: int,
         role: MessageRole,
         content: str,
-        reasoning: str | None = None,
     ) -> None:
         # 对话保存
         message = MessageRecord(
             conversation_id=conversation_id,
             role=role,
             content=content,
-            reasoning=reasoning,
         )
 
         # 更新对话的最新更新时间
@@ -181,14 +229,14 @@ class ConversationRepo(AbstractRepo):
             self._session.commit()
         except:
             self._session.rollback()
-            raise
+            raise Exception
 
     def get_messages(
         self,
         conversation_id: int,
         user_id: int,
         offset: int = 0,
-        limit: int = HISTORY_MESSAGE_LIMIT,
+        limit: int = settings.HISTORY_MESSAGE_LIMIT,
     ) -> MessagesPublic:
         statement = (
             select(MessageRecord)
@@ -209,3 +257,6 @@ class ConversationRepo(AbstractRepo):
         messages = [MessagePublic.model_validate(message) for message in lists]
 
         return MessagesPublic(data=messages)
+
+    def get_usages(self) -> UsagePublic:
+        return get_usage_totals(self._session)

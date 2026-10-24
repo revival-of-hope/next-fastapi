@@ -19,7 +19,11 @@ class Settings(BaseSettings):
 
     TITLE_LENGTH = 10
     DEFAULT_TITLE = "新对话"
+    # 获取所有消息的上限
     MESSAGE_LIMIT: int = 100
+
+    # 获取历史消息的上限
+    HISTORY_MESSAGE_LIMIT = 4
 
     SECRET_KEY: str
 

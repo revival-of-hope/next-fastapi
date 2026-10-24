@@ -1,4 +1,3 @@
-from enum import Enum
 from sqlmodel import Relationship, SQLModel, Field, Text
 from tools import datetime, get_datetime
 from domain.models import MessageRole
