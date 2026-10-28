@@ -1,29 +1,5 @@
-from sqlalchemy.exc import SQLAlchemyError
-
-
 # 基类异常
 class BaseException(Exception):
-    pass
-
-
-# DB异常
-class DbException(BaseException):
-    pass
-
-
-class SQLError(DbException, SQLAlchemyError):
-    pass
-
-
-class AddError(SQLError):
-    pass
-
-
-class DeleteError(SQLError):
-    pass
-
-
-class CommitError(DbException, SQLAlchemyError):
     pass
 
 
@@ -53,7 +29,7 @@ class UserNameNotFound(RepoException):
     pass
 
 
-class VerifyError(RepoException):
+class PasswordMatchError(RepoException):
     pass
 
 
@@ -70,6 +46,74 @@ class ConversationRecordCreateError(RepoException):
     pass
 
 
+class ConversationTitleUpdateError(RepoException):
+    pass
+
+
+class MessageRecordCreateError(RepoException):
+    pass
+
+
+class MessageRecordNotFound(RepoException):
+    pass
+
+
 # Service异常
 class ServiceException(BaseException):
+    pass
+
+
+## UserService
+
+
+class UserNotFound(ServiceException):
+    pass
+
+
+class UsersNotFound(ServiceException):
+    pass
+
+
+class UserCreateError(ServiceException):
+    pass
+
+
+class UserDeleteError(ServiceException):
+    pass
+
+
+class UserNotAdmin(ServiceException):
+    pass
+
+
+## ChatService
+class MessagesNotFound(ServiceException):
+    pass
+
+
+class MessageCreateError(ServiceException):
+    pass
+
+
+class ConversationNotFound(ServiceException):
+    pass
+
+
+class ConversationCreateError(ServiceException):
+    pass
+
+
+class TitleUpdateError(ServiceException):
+    pass
+
+
+class UsageUpdateError(ServiceException):
+    pass
+
+
+class UsagesNotFound(ServiceException):
+    pass
+
+
+class ChatSaveError(ServiceException):
     pass

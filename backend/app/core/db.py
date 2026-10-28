@@ -1,8 +1,9 @@
-from sqlmodel import create_engine, Session, select
-
+from sqlmodel import create_engine, Session
 from app.core.config import settings
-from app.models import User, UserCreate
-from app import crud
+
+from app.domain.schemas import UserCreate
+
+from app.infra.repo import UserRepo
 
 engine = create_engine(
     str(settings.DATABASE_URI),
@@ -10,13 +11,12 @@ engine = create_engine(
 
 
 def init_db(session: Session) -> None:
-    user = session.exec(
-        select(User).where(User.name == settings.SUPERUSER_NAME)
-    ).first()
-    if not user:
+    repo = UserRepo(session)
+    userrecord = repo.get_by_name(settings.SUPERUSER_NAME)
+    if not userrecord:
         new_user = UserCreate(
             name=settings.SUPERUSER_NAME,
             password=settings.SUPERUSER_PASSWORD,
             is_superuser=True,
         )
-        user = crud.register_user(session=session, user_register=new_user)
+        repo.post(new_user)

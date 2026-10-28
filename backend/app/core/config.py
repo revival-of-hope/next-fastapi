@@ -19,13 +19,16 @@ class Settings(BaseSettings):
 
     TITLE_LENGTH = 10
     DEFAULT_TITLE = "新对话"
-    # 获取所有消息的上限
+    # 获取单个对话中所有消息的上限
     MESSAGE_LIMIT: int = 100
 
-    # 获取历史消息的上限
+    # 在对话时获取历史消息的上限
     HISTORY_MESSAGE_LIMIT = 4
 
+    # token加盐密钥
     SECRET_KEY: str
+    # token过期时间: 10天
+    TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 10
 
     SUPERUSER_NAME: str
     SUPERUSER_PASSWORD: str

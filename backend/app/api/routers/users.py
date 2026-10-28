@@ -1,64 +1,93 @@
-from fastapi import APIRouter, HTTPException, status, Response
-from backend.app.services.deps import SessionDep, CurrentUser, Superuser
-from app.models import User, UserPublic, UserRegister
-from app import crud
-from app.domain.schemas import UsagePublic, UsersPublic
+from fastapi import APIRouter, HTTPException, status
+from app.domain.exceptions import UserCreateError, UserDeleteError, UserNotFound
+from app.services.deps import UserServiceDep, CurrentUserID, SuperuserID
+from app.domain.schemas import UserPublic, UsersPublic, UserRegister
+from app.domain.schemas import UsersPublic
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post(
-    "/register",
-    response_model=UserPublic,
-    status_code=status.HTTP_201_CREATED,
-)
-def register_user(session: SessionDep, user_in: UserRegister) -> User:
-    user = crud.get_user_by_name(session=session, name=user_in.name)
+# 用户注册
+@router.post("", status_code=status.HTTP_201_CREATED)
+def user_register(serivce: UserServiceDep, user_in: UserRegister) -> UserPublic:
+    user = serivce.get_by_name(user_in.name)
     if user:
         # 由于没有邮箱,所以只好用名字来进行唯一标识
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Name already exists")
-    user = crud.register_user(session=session, user_register=user_in)
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail="Name already exists",
+        )
+    try:
+        user = serivce.post(user_in)
+    except UserCreateError as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create user",
+        ) from e
+
     return user
 
 
 # 获取用户个人信息
-@router.get("/me", response_model=UserPublic)
-def user_homepage(current_user: CurrentUser) -> User:
-    return current_user
+@router.get("/me", status_code=status.HTTP_200_OK)
+def get_user(service: UserServiceDep, user_id: CurrentUserID) -> UserPublic:
+    try:
+        user = service.get_by_id(user_id)
+    except UserNotFound as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found") from e
+    return user
 
 
 # 获取用户列表
-@router.get("", response_model=UsersPublic)
-def read_users(
-    _: Superuser,
-    session: SessionDep,
+@router.get("", status_code=status.HTTP_200_OK)
+def get_users_list(
+    _: SuperuserID,
+    service: UserServiceDep,
     skip: int,
-    limit: int = 100,
+    limit: int,
 ) -> UsersPublic:
-    return crud.get_users(session=session, offset=skip, limit=limit)
+    return service.get_all(offset=skip, limit=limit)
 
 
-@router.get("/usage", response_model=UsagePublic)
-def read_usage(_: Superuser, session: SessionDep):
-    return crud.get_usage_totals(session=session)
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT)
+def delete_current_user(
+    service: UserServiceDep, current_user_id: CurrentUserID
+) -> None:
+    try:
+        service.delete(current_user_id)
+    except UserDeleteError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User cannot be deleted",
+        )
+    except UserNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
 
 
 # 删除用户
 @router.delete("/{user_id}")
-def delete_user(current_user: Superuser, session: SessionDep, user_id: int) -> Response:
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user_id == current_user.user_id:
+def superuser_delete_user(
+    service: UserServiceDep,
+    superuser_id: SuperuserID,
+    user_id: int,
+) -> None:
+    if superuser_id == user_id:
         raise HTTPException(
-            status_code=403,
-            detail="Super users are not allowed to delete themselves",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Superusers are not allowed to delete themselves",
         )
     try:
-        session.delete(user)
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+        service.delete(user_id)
+    except UserDeleteError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User cannot be deleted",
+        )
+    except UserNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )

@@ -11,7 +11,6 @@ class UserRegister(BaseModel):
 
 
 class UserCreate(UserRegister):
-    is_active: bool = True
     is_superuser: bool = False
 
 
@@ -43,7 +42,6 @@ class UsagePublic(BaseModel):
 
 class UserPublic(BaseModel):
     name: str = Field(min_length=1, max_length=30)
-    is_active: bool = True
     is_superuser: bool = False
     user_id: int
     created_at: datetime

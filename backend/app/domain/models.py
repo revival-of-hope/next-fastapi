@@ -12,7 +12,6 @@ class User(BaseModel):
     name: str
     hashed_password: str
     user_id: int | None = None
-    is_active: bool = True
     is_superuser: bool = False
     created_at: datetime = Field(default_factory=get_datetime)
 

@@ -1,23 +1,20 @@
-from abc import abstractmethod, ABC
+from abc import ABC
 from sqlmodel import Session, select, desc
 from sqlalchemy.orm import selectinload
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.domain.exceptions import (
-    AddError,
-    CommitError,
     ConversationRecordCreateError,
     ConversationRecordNotFound,
+    ConversationTitleUpdateError,
     ConversationsRecordNotFound,
-    DbException,
-    DeleteError,
-    UserAddError,
-    UserDeleteError,
-    UserNameNotFound,
+    MessageRecordCreateError,
+    MessageRecordNotFound,
+    PasswordMatchError,
     UserRecordCreateFailed,
     UserRecordDeleteError,
     UserRecordNotFound,
     UsersRecordNotFound,
-    VerifyError,
 )
 from app.domain.models import Conversation, MessageRole, TokenUsage, User, UserUsage
 from app.domain.schemas import (
@@ -47,18 +44,17 @@ class AbstractRepo(ABC):
     def __init__(self, session: Session):
         self._session = session
 
-    @abstractmethod
-    def get(self): ...
-
-    @abstractmethod
-    def get_all(self): ...
-
-    @abstractmethod
-    def post(self): ...
-
 
 class UserRepo(AbstractRepo):
-    def get(self, name: str) -> User | None:
+    def get_by_id(self, user_id: int) -> User | None:
+        statement = select(UserRecord).where(UserRecord.user_id == user_id)
+        userrecord = self._session.exec(statement).one()
+        if userrecord is None:
+            raise UserRecordNotFound("User Record Not Found")
+
+        return mapper(userrecord, User)
+
+    def get_by_name(self, name: str) -> User | None:
         statement = select(UserRecord).where(UserRecord.name == name)
 
         userrecord = self._session.exec(statement).one()
@@ -120,20 +116,20 @@ class UserRepo(AbstractRepo):
         try:
             self._session.delete(userrecord)
             self._session.commit()
-        except CommitError, DeleteError:
+        except SQLAlchemyError as e:
             self._session.rollback()
-            raise UserRecordDeleteError("user record delete failed")
+            raise UserRecordDeleteError("user record delete failed") from e
 
     def check(self, name: str, password: str) -> int | None:
-        db_user = self.get(name)
+        db_user = self.get_by_name(name)
 
         if db_user is None:
             verify_password(password, DUMMY_HASH)
-            raise UserNameNotFound("Username Not Found")
+            raise UserRecordNotFound("User record Not Found")
 
         verified = verify_password(password, db_user.hashed_password)
         if not verified:
-            raise VerifyError("vecification failed")
+            raise PasswordMatchError("Password Don't Match")
 
         return db_user.user_id
 
@@ -175,22 +171,32 @@ class ConversationRepo(AbstractRepo):
             self._session.add(conversation)
             self._session.commit()
             self._session.refresh(conversation)
-        except AddError, CommitError:
-            raise ConversationRecordCreateError("Conversation record create failed")
+            result = ConversationPublic.model_validate(conversation)
+        except SQLAlchemyError as e:
+            self._session.rollback()
+            raise ConversationRecordCreateError(
+                "Conversation record create failed"
+            ) from e
 
-        return ConversationPublic.model_validate(conversation)
+        return result
 
-    def update_title(self, conversation_id: int, title: str) -> None:
-        conversationrecord = self._session.get(ConversationRecord, conversation_id)
+    def update_title(self, user_id: int, conversation_id: int, title: str) -> None:
+
+        statement = select(ConversationRecord).where(
+            ConversationRecord.conversation_id == conversation_id,
+            ConversationRecord.user_id == user_id,
+        )
+
+        conversationrecord = self._session.exec(statement).one()
         if not conversationrecord:
-            raise Exception
+            raise ConversationRecordNotFound("Conversation record not found")
         conversationrecord.title = title
         try:
             self._session.add(conversationrecord)
             self._session.commit()
-        except:
+        except SQLAlchemyError:
             self._session.rollback()
-            raise Exception
+            raise ConversationTitleUpdateError("Conversation title update failed")
 
     def post_usage(
         self, user_id: int, tokenusage: TokenUsage, role: MessageRole
@@ -220,16 +226,16 @@ class ConversationRepo(AbstractRepo):
         # 更新对话的最新更新时间
         conversation = self._session.get(ConversationRecord, conversation_id)
         if conversation is None:
-            raise Exception
+            raise ConversationsRecordNotFound("Conversations Record Not Found")
 
         conversation.updated_at = get_datetime()
         try:
             self._session.add(message)
             self._session.add(conversation)
             self._session.commit()
-        except:
+        except SQLAlchemyError:
             self._session.rollback()
-            raise Exception
+            raise MessageRecordCreateError("Message record create failed")
 
     def get_messages(
         self,
@@ -252,7 +258,13 @@ class ConversationRepo(AbstractRepo):
             .offset(offset)
             .limit(limit)
         )
-        lists = list(self._session.exec(statement).all())
+        try:
+            messagesequence = self._session.exec(statement).all()
+        except SQLAlchemyError:
+            raise MessageRecordNotFound("Message record not found")
+
+        lists = list(messagesequence)
+
         lists.reverse()
         messages = [MessagePublic.model_validate(message) for message in lists]
 

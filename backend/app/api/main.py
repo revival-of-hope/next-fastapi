@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from fastapi.routing import APIRoute
-from app.api.routers import utils, users, messages
+from app.api.routers import auth, users, chats
 
 
-def generate_operation_id(route: APIRoute):
+def generate_operation_id(route: APIRoute) -> str:
     """
     根据路由路径生成 operationId
 
@@ -35,6 +35,7 @@ def generate_operation_id(route: APIRoute):
 
 
 api_router = APIRouter(generate_unique_id_function=generate_operation_id)
+
 api_router.include_router(users.router)
-api_router.include_router(utils.router)
-api_router.include_router(messages.router)
+api_router.include_router(auth.router)
+api_router.include_router(chats.router)

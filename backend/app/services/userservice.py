@@ -1,28 +1,64 @@
+from app.domain.exceptions import (
+    PasswordMatchError,
+    UserCreateError,
+    UserDeleteError,
+    UserNotFound,
+    UserRecordCreateFailed,
+    UserRecordDeleteError,
+    UserRecordNotFound,
+    UsersNotFound,
+    UsersRecordNotFound,
+)
 from app.services.baseservice import BaseService
 from app.infra.repo import UserRepo
 from app.domain.schemas import UserPublic, UserRegister, UsersPublic
 
 
 class UserService(BaseService[UserRepo]):
-    def get(self, name: str) -> UserPublic:
-        user = self._repo.get(name)
-        if not user:
-            raise
+    def get_by_id(self, user_id: int) -> UserPublic:
+        try:
+            user = self._repo.get_by_id(user_id)
+        except UserRecordNotFound:
+            raise UserNotFound("User not found")
+
+        return UserPublic.model_validate(user)
+
+    def get_by_name(self, name: str) -> UserPublic:
+        try:
+            user = self._repo.get_by_name(name)
+        except UserRecordNotFound:
+            raise UserNotFound("User not found")
+
         return UserPublic.model_validate(user)
 
     def get_all(self, offset: int, limit: int) -> UsersPublic:
-        users = self._repo.get_all(offset, limit)
+        try:
+            users = self._repo.get_all(offset, limit)
+        except UsersRecordNotFound:
+            raise UsersNotFound("Fail to get users list")
 
         return users
 
     def post(self, user_in: UserRegister) -> UserPublic:
-        user = self._repo.post(user_in)
-        if not user:
-            raise
+        try:
+            user = self._repo.post(user_in)
+        except UserRecordCreateFailed:
+            raise UserCreateError("Fail to create new user")
         return user
 
     def delete(self, user_id: int) -> None:
         try:
             self._repo.delete(user_id)
-        except:
+        except UserRecordDeleteError:
+            raise UserDeleteError("Fail to delete user")
+        except UsersRecordNotFound:
+            raise UserNotFound("User not found")
+
+    def check(self, name: str, password: str) -> int | None:
+        try:
+            user_id = self._repo.check(name, password)
+        except UserRecordNotFound:
+            raise UserNotFound("User not found")
+        except PasswordMatchError:
             raise
+        return user_id

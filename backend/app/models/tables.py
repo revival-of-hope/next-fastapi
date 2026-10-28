@@ -10,7 +10,6 @@ class UserRecord(SQLModel, table=True):
         max_length=30,
         index=True,
     )
-    is_active: bool = True
     is_superuser: bool = False
     user_id: int | None = Field(default=None, primary_key=True)
     hashed_password: str = Field(max_length=256)
