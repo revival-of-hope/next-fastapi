@@ -12,6 +12,7 @@ from app.domain.exceptions import (
 from app.services.baseservice import BaseService
 from app.infra.repo import UserRepo
 from app.domain.schemas import UserPublic, UserRegister, UsersPublic
+from app.models.mappers import mapper
 
 
 class UserService(BaseService[UserRepo]):
@@ -21,7 +22,7 @@ class UserService(BaseService[UserRepo]):
         except UserRecordNotFound:
             raise UserNotFound("User not found")
 
-        return UserPublic.model_validate(user)
+        return mapper(user, UserPublic)
 
     def get_by_name(self, name: str) -> UserPublic:
         try:
@@ -29,15 +30,10 @@ class UserService(BaseService[UserRepo]):
         except UserRecordNotFound:
             raise UserNotFound("User not found")
 
-        return UserPublic.model_validate(user)
+        return mapper(user, UserPublic)
 
     def get_all(self, offset: int, limit: int) -> UsersPublic:
-        try:
-            users = self._repo.get_all(offset, limit)
-        except UsersRecordNotFound:
-            raise UsersNotFound("Fail to get users list")
-
-        return users
+        return self._repo.get_all(offset, limit)
 
     def post(self, user_in: UserRegister) -> UserPublic:
         try:

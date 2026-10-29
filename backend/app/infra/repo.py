@@ -7,11 +7,8 @@ from app.domain.exceptions import (
     ConversationRecordCreateError,
     ConversationRecordNotFound,
     ConversationTitleUpdateError,
-    ConversationsRecordNotFound,
     MessageRecordCreateError,
-    MessageRecordNotFound,
     PasswordMatchError,
-    UserRecordCreateFailed,
     UserRecordDeleteError,
     UserRecordNotFound,
     UsersRecordNotFound,
@@ -38,6 +35,7 @@ from app.infra.datas import (
     DUMMY_HASH,
 )
 from app.tools import get_datetime
+from app.models.tables import UserUsageRecord
 
 
 class AbstractRepo(ABC):
@@ -46,18 +44,18 @@ class AbstractRepo(ABC):
 
 
 class UserRepo(AbstractRepo):
-    def get_by_id(self, user_id: int) -> User | None:
+    def get_by_id(self, user_id: int) -> User:
         statement = select(UserRecord).where(UserRecord.user_id == user_id)
-        userrecord = self._session.exec(statement).one()
+        userrecord = self._session.exec(statement).first()
         if userrecord is None:
             raise UserRecordNotFound("User Record Not Found")
 
         return mapper(userrecord, User)
 
-    def get_by_name(self, name: str) -> User | None:
+    def get_by_name(self, name: str) -> User:
         statement = select(UserRecord).where(UserRecord.name == name)
 
-        userrecord = self._session.exec(statement).one()
+        userrecord = self._session.exec(statement).first()
 
         if userrecord is None:
             raise UserRecordNotFound("User Record Not Found")
@@ -76,13 +74,10 @@ class UserRepo(AbstractRepo):
             .limit(limit)
         )
         users = self._session.exec(statement).all()
-
-        if not users:
-            raise UsersRecordNotFound("Users Record Not Found")
-
         users_public: list = []
+
         for user in users:
-            users_public.append(UserPublic.model_validate(user))
+            users_public.append(mapper(user, UserPublic))
 
         return UsersPublic(
             data=users_public,
@@ -98,15 +93,15 @@ class UserRepo(AbstractRepo):
         try:
             self._session.add(user)
             self._session.flush()
-            if user.user_id is None:
-                raise UserRecordCreateFailed("User Record Create Failed")
 
-        except UserRecordCreateFailed:
+            self._session.commit()
+
+        except SQLAlchemyError:
             self._session.rollback()
             raise
 
         self._session.refresh(user)
-        return UserPublic.model_validate(user)
+        return mapper(user, UserPublic)
 
     def delete(self, user_id: int) -> None:
         userrecord = self._session.get(UserRecord, user_id)
@@ -140,7 +135,7 @@ class ConversationRepo(AbstractRepo):
             ConversationRecord.conversation_id == conversation_id,
             ConversationRecord.user_id == user_id,
         )
-        conversation = self._session.exec(statement).one()
+        conversation = self._session.exec(statement).first()
         if not conversation:
             raise ConversationRecordNotFound("Conversation Record Not Found")
         return mapper(conversation, Conversation)
@@ -160,7 +155,7 @@ class ConversationRepo(AbstractRepo):
         )
         results = self._session.exec(statement).all()
         if not results:
-            raise ConversationsRecordNotFound("Conversations Record Not Found")
+            lists = []
         lists = [mapper(result, ConversationPublic) for result in results]
         return ConversationsPublic(data=lists)
 
@@ -171,7 +166,7 @@ class ConversationRepo(AbstractRepo):
             self._session.add(conversation)
             self._session.commit()
             self._session.refresh(conversation)
-            result = ConversationPublic.model_validate(conversation)
+            result = mapper(conversation, ConversationPublic)
         except SQLAlchemyError as e:
             self._session.rollback()
             raise ConversationRecordCreateError(
@@ -187,7 +182,7 @@ class ConversationRepo(AbstractRepo):
             ConversationRecord.user_id == user_id,
         )
 
-        conversationrecord = self._session.exec(statement).one()
+        conversationrecord = self._session.exec(statement).first()
         if not conversationrecord:
             raise ConversationRecordNotFound("Conversation record not found")
         conversationrecord.title = title
@@ -202,10 +197,11 @@ class ConversationRepo(AbstractRepo):
         self, user_id: int, tokenusage: TokenUsage, role: MessageRole
     ) -> None:
         # 用量计算
-        usage = self._session.get(UserUsage, user_id)
+        usage = self._session.get(UserUsageRecord, user_id)
         if usage is None:
-            usage = UserUsage(user_id=user_id)
+            usage = UserUsageRecord(user_id=user_id)
             self._session.add(usage)
+            self._session.flush()
         add_usage(usage, tokenusage, role)
 
         self._session.commit()
@@ -226,7 +222,7 @@ class ConversationRepo(AbstractRepo):
         # 更新对话的最新更新时间
         conversation = self._session.get(ConversationRecord, conversation_id)
         if conversation is None:
-            raise ConversationsRecordNotFound("Conversations Record Not Found")
+            raise ConversationRecordNotFound("Conversation Record Not Found")
 
         conversation.updated_at = get_datetime()
         try:
@@ -249,7 +245,7 @@ class ConversationRepo(AbstractRepo):
             .join(ConversationRecord)
             .where(
                 ConversationRecord.conversation_id == conversation_id,
-                Conversation.user_id == user_id,
+                ConversationRecord.user_id == user_id,
             )
             .order_by(
                 desc(MessageRecord.created_at),
@@ -261,12 +257,11 @@ class ConversationRepo(AbstractRepo):
         try:
             messagesequence = self._session.exec(statement).all()
         except SQLAlchemyError:
-            raise MessageRecordNotFound("Message record not found")
+            raise
 
         lists = list(messagesequence)
-
         lists.reverse()
-        messages = [MessagePublic.model_validate(message) for message in lists]
+        messages = [mapper(message, MessagePublic) for message in lists]
 
         return MessagesPublic(data=messages)
 

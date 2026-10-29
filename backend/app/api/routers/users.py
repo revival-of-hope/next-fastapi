@@ -10,20 +10,22 @@ router = APIRouter(prefix="/users", tags=["users"])
 # 用户注册
 @router.post("", status_code=status.HTTP_201_CREATED)
 def user_register(serivce: UserServiceDep, user_in: UserRegister) -> UserPublic:
-    user = serivce.get_by_name(user_in.name)
-    if user:
-        # 由于没有邮箱,所以只好用名字来进行唯一标识
-        raise HTTPException(
-            status.HTTP_409_CONFLICT,
-            detail="Name already exists",
-        )
     try:
-        user = serivce.post(user_in)
-    except UserCreateError as e:
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create user",
-        ) from e
+        user = serivce.get_by_name(user_in.name)
+        if user:
+            # 由于没有邮箱,所以只好用名字来进行唯一标识
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail="Name already exists",
+            )
+    except UserNotFound:
+        try:
+            user = serivce.post(user_in)
+        except UserCreateError as e:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create user",
+            ) from e
 
     return user
 

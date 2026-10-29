@@ -31,21 +31,18 @@ from app.agents.preset import default_agent
 
 class ChatService(BaseService[ConversationRepo]):
     def get_messages(self, conversation_id: int, user_id: int) -> MessagesPublic:
-        try:
-            messages = self._repo.get_messages(
-                conversation_id, user_id, 0, settings.MESSAGE_LIMIT
-            )
-        except MessageRecordNotFound:
-            raise MessagesNotFound("Messages not found")
+
+        messages = self._repo.get_messages(
+            conversation_id, user_id, 0, settings.MESSAGE_LIMIT
+        )
+
         return messages
 
     def get_conversations(
         self, user_id: int, offset: int, limit: int
     ) -> ConversationsPublic:
-        try:
-            conversations = self._repo.get_all(user_id, offset, limit)
-        except ConversationRecordNotFound:
-            raise ConversationNotFound("Conversation not found")
+
+        conversations = self._repo.get_all(user_id, offset, limit)
         return conversations
 
     def post_conversation(self, user_id: int, content: str) -> ConversationPublic:

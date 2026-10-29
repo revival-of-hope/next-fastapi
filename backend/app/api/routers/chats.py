@@ -25,7 +25,7 @@ def get_conversations_list(
 @router.get("/messages", status_code=status.HTTP_200_OK)
 def get_messages_list(
     service: ChatServiceDep,
-    user_id: int,
+    user_id: CurrentUserID,
     conversation_id: int,
 ) -> MessagesPublic:
     return service.get_messages(conversation_id, user_id)
@@ -89,4 +89,5 @@ def chat(
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
         },
+        media_type="text/event-stream",
     )

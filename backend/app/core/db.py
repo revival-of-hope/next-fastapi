@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.domain.schemas import UserCreate
 
 from app.infra.repo import UserRepo
+from app.domain.exceptions import UserRecordNotFound
 
 engine = create_engine(
     str(settings.DATABASE_URI),
@@ -12,8 +13,9 @@ engine = create_engine(
 
 def init_db(session: Session) -> None:
     repo = UserRepo(session)
-    userrecord = repo.get_by_name(settings.SUPERUSER_NAME)
-    if not userrecord:
+    try:
+        userrecord = repo.get_by_name(settings.SUPERUSER_NAME)
+    except UserRecordNotFound:
         new_user = UserCreate(
             name=settings.SUPERUSER_NAME,
             password=settings.SUPERUSER_PASSWORD,

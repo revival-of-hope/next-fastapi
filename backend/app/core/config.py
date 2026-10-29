@@ -17,13 +17,13 @@ class Settings(BaseSettings):
 
     DEFAULT_SYSTEM_PROMPT: str = "以后的回答都要优先输出一句话,我是deepseek-v4-pro."
 
-    TITLE_LENGTH = 10
-    DEFAULT_TITLE = "新对话"
+    TITLE_LENGTH: int = 10
+    DEFAULT_TITLE: str = "新对话"
     # 获取单个对话中所有消息的上限
     MESSAGE_LIMIT: int = 100
 
     # 在对话时获取历史消息的上限
-    HISTORY_MESSAGE_LIMIT = 4
+    HISTORY_MESSAGE_LIMIT: int = 4
 
     # token加盐密钥
     SECRET_KEY: str

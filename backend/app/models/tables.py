@@ -1,6 +1,6 @@
 from sqlmodel import Relationship, SQLModel, Field, Text
-from tools import datetime, get_datetime
-from domain.models import MessageRole
+from app.tools import datetime, get_datetime
+from app.domain.models import MessageRole
 
 
 # User
@@ -24,7 +24,7 @@ class UserRecord(SQLModel, table=True):
 
 class UserUsageRecord(SQLModel, table=True):
     user_id: int = Field(
-        foreign_key="user.user_id",
+        foreign_key="userrecord.user_id",
         primary_key=True,
         ondelete="CASCADE",
     )
@@ -45,7 +45,7 @@ class ConversationRecord(SQLModel, table=True):
     title: str | None = Field(default="新对话", min_length=1, max_length=120)
     conversation_id: int | None = Field(default=None, primary_key=True)
 
-    user_id: int = Field(foreign_key="user.user_id")
+    user_id: int = Field(foreign_key="userrecord.user_id")
     user: UserRecord | None = Relationship(back_populates="conversations")
 
     messages: list["MessageRecord"] = Relationship(
@@ -63,7 +63,7 @@ class ConversationRecord(SQLModel, table=True):
 # Message
 class MessageRecord(SQLModel, table=True):
     conversation_id: int | None = Field(
-        foreign_key="conversation.conversation_id",
+        foreign_key="conversationrecord.conversation_id",
         ondelete="CASCADE",
     )
     role: MessageRole

@@ -25,12 +25,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-add_scalar_reference(app)
+add_scalar_reference(app, route="/api/scalar")
 
 
 def main():
     uvicorn.run(
-        "main:app",
+        "app.main:app",
         host="localhost",
         port=8000,
         workers=1,
